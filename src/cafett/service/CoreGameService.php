@@ -3,6 +3,7 @@
 namespace cafett\service;
 
 use cafett\block\Nexus;
+use cafett\model\job\Handyman;
 use cafett\scoreboard\CoreGameScoreboard;
 use cafett\GameTypeList;
 use cafett\storage\CoreGamePlayerDataStorage;
@@ -201,6 +202,16 @@ class CoreGameService
             self::$scheduler->scheduleDelayedTask(new ClosureTask(function (int $tick) use ($level, $nexusPosition) : void {
                 $level->setBlock($nexusPosition, Block::get(Nexus::ID));
             }), 20 * 0.5);
+        }
+
+        //todo ハンディーマンの能力はフェーズに影響されるように
+        //今は20パーで回復
+        if (CoreGamePlayerDataStorage::get($attacker->getName())->getCurrentJob() instanceof Handyman) {
+            if ($attackerTeam->getScore() < Nexus::MAX_HEALTH) {//チームがすでに負けていたら無し
+                if (mt_rand(1, 10) <= 2) {
+                    GameChef::addTeamGameScore($teamGame->getId(), $attackerTeam->getId(), new Score(-1));
+                }
+            }
         }
 
         GameChef::addTeamGameScore($teamGame->getId(), $targetTeam->getId(), new Score(1));
