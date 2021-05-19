@@ -5,9 +5,11 @@ namespace cafett\listener;
 
 use cafett\block\Nexus;
 use cafett\block\Ore;
+use cafett\model\job\Archer;
 use cafett\scoreboard\CoreGameScoreboard;
 use cafett\service\CoreGameService;
 use cafett\GameTypeList;
+use cafett\storage\CoreGamePlayerDataStorage;
 use game_chef\api\GameChef;
 use game_chef\models\GameStatus;
 use game_chef\models\Score;
@@ -21,10 +23,9 @@ use game_chef\pmmp\events\StartedGameEvent;
 use game_chef\pmmp\events\UpdatedGameTimerEvent;
 use game_chef\services\MapService;
 use game_chef\TaskSchedulerStorage;
-use pocketmine\block\DiamondOre;
-use pocketmine\block\IronOre;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
+use pocketmine\event\entity\EntityShootBowEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerJoinEvent;
@@ -296,5 +297,20 @@ class CoreGameListener implements Listener
         if (in_array($id, Ore::IDS)) return false;
         if ($id === Nexus::ID) return false;
         return true;
+    }
+
+    public function onDamage(EntityShootBowEvent $event) {
+        $arrow = $event->getEntity();
+
+        //職業がArcherなら、与えるダメージ + 1
+        if ($arrow instanceof \pocketmine\entity\projectile\Arrow) {
+            $shooter = $arrow->getOwningEntity();
+            if ($shooter instanceof Player) {
+                $shooterData = CoreGamePlayerDataStorage::get($shooter);
+                if ($shooterData->getCurrentJob()::NAME === Archer::NAME) {
+                    $arrow->setBaseDamage($arrow->getBaseDamage() + 1);
+                }
+            }
+        }
     }
 }
