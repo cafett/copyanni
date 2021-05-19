@@ -16,13 +16,13 @@ abstract class Job
     const NAME = "";
     const DESCRIPTION = "";
 
-    private array $initialInventory;
-    private array $effects;
+    protected array $initialInventory;
+    protected array $effects;
 
-    private TaskHandler $coolTimeHandler;
-    private bool $onCoolTime = false;
-    private int $initialSkillCoolTime;
-    private int $skillCoolTime;
+    protected TaskHandler $coolTimeHandler;
+    protected bool $onCoolTime = false;
+    protected int $initialSkillCoolTime;
+    protected int $skillCoolTime;
 
     public function __construct(array $initialInventory, array $effects, int $initialSkillCoolTime) {
         $this->initialInventory = $initialInventory;

@@ -6,6 +6,7 @@ namespace cafett\listener;
 use cafett\block\Nexus;
 use cafett\block\Ore;
 use cafett\model\job\Archer;
+use cafett\model\job\Warrior;
 use cafett\scoreboard\CoreGameScoreboard;
 use cafett\service\CoreGameService;
 use cafett\GameTypeList;
@@ -16,6 +17,7 @@ use game_chef\models\Score;
 use game_chef\pmmp\bossbar\Bossbar;
 use game_chef\pmmp\events\AddScoreEvent;
 use game_chef\pmmp\events\FinishedGameEvent;
+use game_chef\pmmp\events\PlayerAttackPlayerEvent;
 use game_chef\pmmp\events\PlayerJoinGameEvent;
 use game_chef\pmmp\events\PlayerKilledPlayerEvent;
 use game_chef\pmmp\events\PlayerQuitGameEvent;
@@ -25,6 +27,7 @@ use game_chef\services\MapService;
 use game_chef\TaskSchedulerStorage;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
+use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityShootBowEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerDeathEvent;
@@ -293,7 +296,7 @@ class CoreGameListener implements Listener
         }
     }
 
-    private function isCanPlace(int $id) : bool{
+    private function isCanPlace(int $id): bool {
         if (in_array($id, Ore::IDS)) return false;
         if ($id === Nexus::ID) return false;
         return true;
@@ -311,6 +314,24 @@ class CoreGameListener implements Listener
                     $arrow->setBaseDamage($arrow->getBaseDamage() + 1);
                 }
             }
+        }
+    }
+
+    public function onPlayerAttackPlayer(PlayerAttackPlayerEvent $event) {
+        if (!$event->getGameType()->equals(GameTypeList::core())) return;
+
+        $attacker = $event->getAttacker();
+        $attackerData = CoreGamePlayerDataStorage::get($attacker->getName());
+        $job = $attackerData->getCurrentJob();
+        //Warriorならダメージ+1, Skill発動中ならさらに+1
+        if ($job instanceof Warrior) {
+            $additionalDamage = 1;
+            if ($job->isOnFrenzy()) $additionalDamage++;
+
+            $target = $event->getTarget();
+            $source = new EntityDamageByEntityEvent($attacker, $target, $event->getCause(), $event->getBaseDamage(), [], $event->getKnockBack());
+            $target->setLastDamageCause($source);
+            $target->setHealth($target->getHealth() - $additionalDamage);
         }
     }
 }
