@@ -6,6 +6,7 @@ namespace cafett\item;
 
 use cafett\model\job\Miner;
 use cafett\storage\CoreGamePlayerDataStorage;
+use game_chef\api\GameChef;
 use pocketmine\block\Block;
 use pocketmine\item\Item;
 use pocketmine\item\ItemIds;
@@ -24,22 +25,35 @@ class SkillItem extends Item
     }
 
     public function onActivate(Player $player, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector): bool {
-        return $this->use($player);
+        return $this->use($player, $blockClicked);
     }
 
     public function onClickAir(Player $player, Vector3 $directionVector): bool {
         return $this->use($player);
     }
 
-    private function use(Player $player):bool{
-        $playerData = CoreGamePlayerDataStorage::get($player->getName());
-        if ($playerData->getCurrentJob()::NAME !== Miner::NAME) {
+    public function onClickPlayer(Player $player, Player $target): bool {
+        return $this->use($player, null, $target);
+    }
+
+    protected function use(Player $player, ?Block $block = null, ?Player $target = null): bool {
+        $playerData = GameChef::findPlayerData($player->getName());
+
+        //todo:coreゲーム以外で使えなくする
+        if ($playerData->getBelongGameId() === null) {
+            $player->sendMessage("this item can be used on Game");
+            $player->getInventory()->remove($this);
+            return false;
+        }
+
+        $playerCoreGameData = CoreGamePlayerDataStorage::get($player->getName());
+        if ($playerCoreGameData->getCurrentJob()::NAME !== self::JOB_NAME) {
             $player->sendMessage("you cannot use this item because of your job. this item can be used by only " . self::JOB_NAME);
             $player->getInventory()->remove($this);
             return false;
         }
 
-        $playerData->getCurrentJob()->activateSkill($player);
+        $playerCoreGameData->getCurrentJob()->activateSkill($player);
         return true;
     }
 }
