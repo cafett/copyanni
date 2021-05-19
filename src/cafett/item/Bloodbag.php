@@ -14,7 +14,7 @@ use pocketmine\Player;
 class Bloodbag extends SkillItem
 {
     const NAME = "Bloodbag";
-    const ID = ItemIds::BOOK;
+    const ID = ItemIds::COOKED_PORKCHOP;
     const JOB_NAME = Healer::NAME;
 
 
