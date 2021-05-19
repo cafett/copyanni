@@ -36,13 +36,14 @@ abstract class Job
             $player->sendMessage("あと" . $this->skillCoolTime . "秒");
             return false;
         } else {
+            $this->onCoolTime = true;
             $this->coolTimeHandler = TaskSchedulerStorage::get()->scheduleDelayedRepeatingTask(new ClosureTask(function (int $tick) {
                 $this->skillCoolTime--;
                 if ($this->skillCoolTime === 0) {
                     $this->onCoolTime = false;
                     $this->coolTimeHandler->cancel();
                 }
-            }), 20, 20);
+            }), 20, 20 * $this->initialSkillCoolTime);
             return true;
         }
     }
