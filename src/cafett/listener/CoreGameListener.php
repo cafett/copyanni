@@ -5,6 +5,7 @@ namespace cafett\listener;
 
 use cafett\block\Nexus;
 use cafett\block\Ore;
+use cafett\model\job\Acrobat;
 use cafett\model\job\Archer;
 use cafett\model\job\Warrior;
 use cafett\scoreboard\CoreGameScoreboard;
@@ -28,11 +29,14 @@ use game_chef\TaskSchedulerStorage;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
+use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityShootBowEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerDeathEvent;
 use pocketmine\event\player\PlayerJoinEvent;
+use pocketmine\event\player\PlayerJumpEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
+use pocketmine\event\player\PlayerToggleFlightEvent;
 use pocketmine\Player;
 use pocketmine\scheduler\ClosureTask;
 use pocketmine\scheduler\TaskScheduler;
@@ -302,6 +306,7 @@ class CoreGameListener implements Listener
         return true;
     }
 
+    //Archer
     public function onDamage(EntityShootBowEvent $event) {
         $arrow = $event->getEntity();
 
@@ -317,6 +322,7 @@ class CoreGameListener implements Listener
         }
     }
 
+    //Warrior
     public function onPlayerAttackPlayer(PlayerAttackPlayerEvent $event) {
         if (!$event->getGameType()->equals(GameTypeList::core())) return;
 
@@ -332,6 +338,40 @@ class CoreGameListener implements Listener
             $source = new EntityDamageByEntityEvent($attacker, $target, $event->getCause(), $event->getBaseDamage(), [], $event->getKnockBack());
             $target->setLastDamageCause($source);
             $target->setHealth($target->getHealth() - $additionalDamage);
+        }
+    }
+
+    //Acrobat
+    public function onJump(PlayerJumpEvent $event) {
+        $player = $event->getPlayer();
+
+        $playerData = CoreGamePlayerDataStorage::get($player->getName());
+        if ($playerData->getCurrentJob() instanceof Acrobat) {
+            $player->setAllowFlight(true);
+        }
+    }
+
+    //Acrobat
+    public function onToggleFlight(PlayerToggleFlightEvent $event) {
+        $player = $event->getPlayer();
+        $playerData = CoreGamePlayerDataStorage::get($player->getName());
+        if ($playerData->getCurrentJob() instanceof Acrobat) {
+            $player->setFlying(false);
+            $playerData->getCurrentJob()->activateSkill($player);
+            $event->setCancelled(true);
+        }
+    }
+
+    //Acrobat
+    public function onFallDamage(EntityDamageEvent $event) {
+        if ($event->getCause() === EntityDamageEvent::CAUSE_FALL) {
+            $entity = $event->getEntity();
+            if ($entity instanceof Player) {
+                $playerData = CoreGamePlayerDataStorage::get($entity->getName());
+                if ($playerData->getCurrentJob() instanceof Acrobat) {
+                    $event->setCancelled();
+                }
+            }
         }
     }
 }
