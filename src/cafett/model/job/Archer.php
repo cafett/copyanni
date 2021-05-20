@@ -16,11 +16,12 @@ class Archer extends Job
     const DESCRIPTION = "";
 
     public function __construct() {
-        $bow = Item::get(ItemIds::ARROW, 0, 16);
+        $bow = Item::get(ItemIds::BOW);
         $bow->addEnchantment(new EnchantmentInstance(Enchantment::getEnchantment(Enchantment::PUNCH), 1));
 
         parent::__construct(
             [
+                Item::get(ItemIds::ARROW, 0, 16),
                 $bow,
                 Item::get(ItemIds::WOODEN_SWORD),
                 Item::get(ItemIds::WOODEN_PICKAXE),
