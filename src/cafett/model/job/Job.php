@@ -21,14 +21,17 @@ abstract class Job
 
     protected TaskHandler $coolTimeHandler;
     protected bool $onCoolTime = false;
-    protected int $initialSkillCoolTime;
-    protected int $skillCoolTime;
+    protected float $initialSkillCoolTime;
+    protected float $skillCoolTime;
+    protected float $skillCoolTimePeriod;
 
-    public function __construct(array $initialInventory, array $effects, int $initialSkillCoolTime) {
+
+    public function __construct(array $initialInventory, array $effects, float $initialSkillCoolTime, float $skillCoolTimePeriod = 1) {
         $this->initialInventory = $initialInventory;
         $this->effects = $effects;
         $this->initialSkillCoolTime = $initialSkillCoolTime;
         $this->skillCoolTime = $initialSkillCoolTime;
+        $this->skillCoolTimePeriod = $skillCoolTimePeriod;
     }
 
     public function activateSkill(Player $player): bool {
@@ -37,13 +40,14 @@ abstract class Job
             return false;
         } else {
             $this->onCoolTime = true;
+            $this->skillCoolTime = $this->initialSkillCoolTime;
             $this->coolTimeHandler = TaskSchedulerStorage::get()->scheduleDelayedRepeatingTask(new ClosureTask(function (int $tick) {
-                $this->skillCoolTime--;
-                if ($this->skillCoolTime === 0) {
+                $this->skillCoolTime -= $this->skillCoolTimePeriod;
+                if ($this->skillCoolTime <= 0) {
                     $this->onCoolTime = false;
                     $this->coolTimeHandler->cancel();
                 }
-            }), 20, 20 * $this->initialSkillCoolTime);
+            }), 20 * $this->skillCoolTimePeriod, 20 * $this->skillCoolTimePeriod);
             return true;
         }
     }
