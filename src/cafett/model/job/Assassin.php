@@ -17,7 +17,7 @@ use pocketmine\Server;
 
 class Assassin extends Job
 {
-    const NAME = "Archer";
+    const NAME = "Assassin";
     const DESCRIPTION = "";
 
     private bool $isOnLeap = false;
