@@ -4,6 +4,7 @@
 namespace cafett\model\job;
 
 
+use cafett\item\ArrowDrop;
 use pocketmine\item\enchantment\Enchantment;
 use pocketmine\item\enchantment\EnchantmentInstance;
 use pocketmine\item\Item;
@@ -27,6 +28,7 @@ class Archer extends Job
                 Item::get(ItemIds::WOODEN_PICKAXE),
                 Item::get(ItemIds::WOODEN_AXE),
                 Item::get(ItemIds::WOODEN_SHOVEL),
+                new ArrowDrop(),
                 Item::get(ItemIds::POTION, 21, 1),
             ],
             [],
