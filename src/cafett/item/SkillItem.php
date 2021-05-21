@@ -4,23 +4,21 @@
 namespace cafett\item;
 
 
-use cafett\model\job\Miner;
 use cafett\storage\CoreGamePlayerDataStorage;
 use game_chef\api\GameChef;
 use pocketmine\block\Block;
 use pocketmine\item\Item;
-use pocketmine\item\ItemIds;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
 
 class SkillItem extends Item
 {
     const NAME = "";
-    const ID = ItemIds::GOLDEN_NUGGET;
+    const ID = 0;
     const JOB_NAME = "";
 
     public function __construct() {
-        parent::__construct(self::ID, 0, self::NAME);
+        parent::__construct(static::ID, 0, static::NAME);
         $this->setCustomName($this->name);
     }
 
