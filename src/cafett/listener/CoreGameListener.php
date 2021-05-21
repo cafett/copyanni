@@ -7,6 +7,7 @@ use cafett\block\Nexus;
 use cafett\block\Ore;
 use cafett\model\job\Acrobat;
 use cafett\model\job\Archer;
+use cafett\model\job\Assassin;
 use cafett\model\job\Warrior;
 use cafett\scoreboard\CoreGameScoreboard;
 use cafett\service\CoreGameService;
@@ -206,9 +207,14 @@ class CoreGameListener implements Listener
         }
     }
 
+    //Assassin
     public function onPlayerDeath(PlayerDeathEvent $event) {
         $player = $event->getPlayer();
         if (!GameChef::isRelatedWith($player, GameTypeList::core())) return;
+
+        $playerCoreGameData = CoreGamePlayerDataStorage::get($player->getName());
+        $job = $playerCoreGameData->getCurrentJob();
+        if ($job instanceof Assassin) $job->cancelSkill();
 
         $playerData = GameChef::findPlayerData($player->getName());
         $game = GameChef::findGameById($playerData->getBelongGameId());
@@ -307,7 +313,7 @@ class CoreGameListener implements Listener
     }
 
     //Archer
-    public function onDamage(EntityShootBowEvent $event) {
+    public function onDamageByShooting(EntityShootBowEvent $event) {
         $arrow = $event->getEntity();
 
         //職業がArcherなら、与えるダメージ + 1
@@ -322,22 +328,29 @@ class CoreGameListener implements Listener
         }
     }
 
-    //Warrior
+    //Warrior Assassin
     public function onPlayerAttackPlayer(PlayerAttackPlayerEvent $event) {
         if (!$event->getGameType()->equals(GameTypeList::core())) return;
 
         $attacker = $event->getAttacker();
         $attackerData = CoreGamePlayerDataStorage::get($attacker->getName());
-        $job = $attackerData->getCurrentJob();
+        $attackerJob = $attackerData->getCurrentJob();
         //Warriorならダメージ+1, Skill発動中ならさらに+1
-        if ($job instanceof Warrior) {
+        if ($attackerJob instanceof Warrior) {
             $additionalDamage = 1;
-            if ($job->isOnFrenzy()) $additionalDamage++;
+            if ($attackerJob->isOnFrenzy()) $additionalDamage++;
 
             $target = $event->getTarget();
             $source = new EntityDamageByEntityEvent($attacker, $target, $event->getCause(), $event->getBaseDamage(), [], $event->getKnockBack());
             $target->setLastDamageCause($source);
             $target->setHealth($target->getHealth() - $additionalDamage);
+        }
+
+        //Assassinならスキルをキャンセルする
+        $targetJob = CoreGamePlayerDataStorage::get($attacker->getName())->getCurrentJob();
+        if ($targetJob instanceof Assassin) {
+            $targetJob->cancelSkill();
+            $targetJob->reverseArmor($event->getTarget()->getName());
         }
     }
 
@@ -362,14 +375,21 @@ class CoreGameListener implements Listener
         }
     }
 
-    //Acrobat
+    //Acrobat Assassin
     public function onFallDamage(EntityDamageEvent $event) {
         if ($event->getCause() === EntityDamageEvent::CAUSE_FALL) {
             $entity = $event->getEntity();
             if ($entity instanceof Player) {
                 $playerData = CoreGamePlayerDataStorage::get($entity->getName());
-                if ($playerData->getCurrentJob() instanceof Acrobat) {
+                $job = $playerData->getCurrentJob();
+                if ($job instanceof Acrobat) {
                     $event->setCancelled();
+                }
+
+                if ($job instanceof Assassin) {
+                    if ($job->isOnLeap()) {
+                        $event->setCancelled();
+                    }
                 }
             }
         }

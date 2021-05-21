@@ -41,7 +41,7 @@ abstract class Job
         } else {
             $this->onCoolTime = true;
             $this->skillCoolTime = $this->initialSkillCoolTime;
-            $this->coolTimeHandler = TaskSchedulerStorage::get()->scheduleDelayedRepeatingTask(new ClosureTask(function (int $tick) {
+            $this->coolTimeHandler = TaskSchedulerStorage::get()->scheduleDelayedRepeatingTask(new ClosureTask(function (int $tick): void {
                 $this->skillCoolTime -= $this->skillCoolTimePeriod;
                 if ($this->skillCoolTime <= 0) {
                     $this->onCoolTime = false;
@@ -65,4 +65,7 @@ abstract class Job
     public function getEffects(): array {
         return $this->effects;
     }
+
+    //todo 職業変更時に呼び出す
+    public function onChangeJob(): void { }
 }
