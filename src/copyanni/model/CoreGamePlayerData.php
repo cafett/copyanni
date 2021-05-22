@@ -5,6 +5,7 @@ namespace copyanni\model;
 
 use copyanni\model\job\Civilian;
 use copyanni\model\job\Job;
+use DateTime;
 use pocketmine\Server;
 
 class CoreGamePlayerData
@@ -12,11 +13,13 @@ class CoreGamePlayerData
     private string $name;
     private array $ownJobNames;
     private Job $currentJob;
+    private ?DateTime $lastImmobilizedTime;
 
-    public function __construct(string $name, array $ownJobNames, Job $job) {
+    public function __construct(string $name, array $ownJobNames, Job $job, ?DateTime $lastImmobilizedTime = null) {
         $this->name = $name;
         $this->ownJobNames = $ownJobNames;
         $this->currentJob = $job;
+        $this->lastImmobilizedTime = $lastImmobilizedTime;
     }
 
     static function asNew(string $name): self {
@@ -66,9 +69,17 @@ class CoreGamePlayerData
         return $this->currentJob;
     }
 
-    public function updateCurrentJob(Job $job) :void {
+    public function updateCurrentJob(Job $job): void {
         $player = Server::getInstance()->getPlayer($this->name);
         $this->currentJob->onChangeJob($player);
         $this->currentJob = $job;
+    }
+
+    public function getLastImmobilizedTime(): ?DateTime {
+        return $this->lastImmobilizedTime;
+    }
+
+    public function setLastImmobilizedTime(?DateTime $lastImmobilizedTime): void {
+        $this->lastImmobilizedTime = $lastImmobilizedTime;
     }
 }
