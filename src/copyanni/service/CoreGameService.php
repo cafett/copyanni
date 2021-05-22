@@ -9,20 +9,15 @@ use copyanni\GameTypeList;
 use copyanni\storage\CoreGamePlayerDataStorage;
 use game_chef\api\GameChef;
 use game_chef\api\TeamGameBuilder;
-use game_chef\models\Game;
 use game_chef\models\GameId;
 use game_chef\models\Score;
 use game_chef\models\Team;
 use game_chef\models\TeamGame;
 use game_chef\pmmp\bossbar\Bossbar;
-use pocketmine\block\Bedrock;
-use pocketmine\block\Block;
 use pocketmine\entity\Attribute;
-use pocketmine\level\particle\ExplodeParticle;
 use pocketmine\level\Position;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
-use pocketmine\scheduler\ClosureTask;
 use pocketmine\scheduler\TaskScheduler;
 use pocketmine\Server;
 use pocketmine\utils\TextFormat;
@@ -40,8 +35,8 @@ class CoreGameService
         try {
             $builder->setNumberOfTeams(2);
             $builder->setGameType(GameTypeList::core());
-            $builder->setTimeLimit(600);
-            $builder->setVictoryScore(new Score(Nexus::MAX_HEALTH));
+            $builder->setTimeLimit(null);
+            $builder->setVictoryScore(null);
             $builder->setCanJumpIn(true);
             $builder->selectMapByName($mapName);
 
@@ -184,23 +179,6 @@ class CoreGameService
                     $attackerTeam->getTeamColorFormat() . $attacker->getName() . TextFormat::RESET . "が" . $targetTeam->getTeamColorFormat() . $targetTeam->getName() . TextFormat::RESET . "を攻撃中"
                 );
             }
-        }
-
-        $isFinish = $targetTeam->getScore()->getValue() === (Nexus::MAX_HEALTH - 1);
-        if ($isFinish) {
-            $level = $attacker->getLevel();
-            $level->setBlock($nexusPosition, new Bedrock());
-
-            $i = 0;
-            while ($i > 4) {
-                $level->addParticle(new ExplodeParticle($nexusPosition));
-                $i++;
-            }
-        } else {
-            $level = $attacker->getLevel();
-            self::$scheduler->scheduleDelayedTask(new ClosureTask(function (int $tick) use ($level, $nexusPosition) : void {
-                $level->setBlock($nexusPosition, Block::get(Nexus::ID));
-            }), 20 * 0.5);
         }
 
         if (CoreGamePlayerDataStorage::get($attacker->getName())->getCurrentJob() instanceof Handyman) {

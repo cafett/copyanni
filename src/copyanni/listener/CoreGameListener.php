@@ -17,6 +17,7 @@ use game_chef\api\GameChef;
 use game_chef\models\GameStatus;
 use game_chef\models\Score;
 use game_chef\pmmp\bossbar\Bossbar;
+use game_chef\pmmp\events\AddedScoreEvent;
 use game_chef\pmmp\events\AddScoreEvent;
 use game_chef\pmmp\events\FinishedGameEvent;
 use game_chef\pmmp\events\PlayerAttackPlayerEvent;
@@ -27,6 +28,8 @@ use game_chef\pmmp\events\StartedGameEvent;
 use game_chef\pmmp\events\UpdatedGameTimerEvent;
 use game_chef\services\MapService;
 use game_chef\TaskSchedulerStorage;
+use pocketmine\block\Bedrock;
+use pocketmine\block\Block;
 use pocketmine\block\BlockIds;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
@@ -39,6 +42,7 @@ use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerJumpEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\event\player\PlayerToggleFlightEvent;
+use pocketmine\level\particle\ExplodeParticle;
 use pocketmine\Player;
 use pocketmine\scheduler\ClosureTask;
 use pocketmine\scheduler\TaskScheduler;
@@ -120,17 +124,10 @@ class CoreGameListener implements Listener
         if (!$gameType->equals(GameTypeList::core())) return;
 
         $winTeam = null;
-        $availableTeamCount = 0;
         $game = GameChef::findGameById($gameId);
         foreach ($game->getTeams() as $team) {
-            if ($team->getScore()->getValue() < Nexus::MAX_HEALTH) {
-                $availableTeamCount++;
-                $winTeam = $team;
-            }
+            if ($team->getScore()->getValue() < Nexus::MAX_HEALTH)  $winTeam = $team;
         }
-
-        //2チーム以上残っていたら試合は終了しない
-        if ($availableTeamCount >= 2) return;
 
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $player = Server::getInstance()->getPlayer($playerData->getName());
@@ -207,7 +204,7 @@ class CoreGameListener implements Listener
         }
     }
 
-    public function onAddedScore(AddScoreEvent $event) {
+    public function onAddedScore(AddedScoreEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
         if (!$gameType->equals(GameTypeList::core())) return;
@@ -216,6 +213,36 @@ class CoreGameListener implements Listener
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $player = Server::getInstance()->getPlayer($playerData->getName());
             CoreGameScoreboard::update($player, $game);
+        }
+
+        $teamId = $event->getTeamId();
+        $team = $game->getTeamById($teamId);
+
+        $isCritical = $event->getCurrentScore() === Nexus::MAX_HEALTH;
+        $level = Server::getInstance()->getLevelByName($game->getMap()->getLevelName());
+        $nexusPosition = $team->getCustomVectorData(Nexus::POSITION_DATA_KEY);
+        if ($isCritical) {
+            $level->setBlock($nexusPosition, new Bedrock());
+            $i = 0;
+            while ($i > 4) {
+                $level->addParticle(new ExplodeParticle($nexusPosition));
+                $i++;
+            }
+
+            $availableTeamCount = 0;
+            $game = GameChef::findGameById($gameId);
+            foreach ($game->getTeams() as $team) {
+                if ($team->getScore()->getValue() < Nexus::MAX_HEALTH) {
+                    $availableTeamCount++;
+                }
+            }
+            //2チーム以上残っていたら試合は終了しない
+            if ($availableTeamCount >= 2) return;
+            GameChef::finishGame($gameId);
+        } else {
+            TaskSchedulerStorage::get()->scheduleDelayedTask(new ClosureTask(function (int $tick) use ($level, $nexusPosition) : void {
+                $level->setBlock($nexusPosition, Block::get(Nexus::ID));
+            }), 20 * 0.5);
         }
     }
 
