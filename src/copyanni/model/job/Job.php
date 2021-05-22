@@ -6,6 +6,7 @@ namespace copyanni\model\job;
 
 use game_chef\TaskSchedulerStorage;
 use pocketmine\entity\EffectInstance;
+use pocketmine\entity\Entity;
 use pocketmine\item\Item;
 use pocketmine\Player;
 use pocketmine\scheduler\ClosureTask;
@@ -25,6 +26,25 @@ abstract class Job
     protected float $skillCoolTime;
     protected float $skillCoolTimePeriod;
 
+    const JOBS = [
+        Acrobat::NAME,
+        Archer::NAME,
+        Assassin::NAME,
+        Builder::NAME,
+        Civilian::NAME,
+        Handyman::NAME,
+        Healer::NAME,
+        Miner::NAME,
+        Scout::NAME,
+        Warrior::NAME,
+    ];
+
+    static function fromName(string $name): ?self {
+        if (in_array($name, self::JOBS)) {
+            return new $name();
+        }
+        return null;
+    }
 
     public function __construct(array $initialInventory, array $effects, float $initialSkillCoolTime, float $skillCoolTimePeriod = 1) {
         $this->initialInventory = $initialInventory;
@@ -66,6 +86,5 @@ abstract class Job
         return $this->effects;
     }
 
-    //todo 職業変更時に呼び出す
     public function onChangeJob(): void { }
 }

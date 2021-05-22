@@ -38,11 +38,10 @@ class CoreGamePlayerData
     }
 
     static function fromJson(array $json): self {
-        //todo : current_job_nameからcurrentJobへの変換
         return new self(
             $json["name"],
             $json["own_job_names"],
-            new Civilian(),
+            Job::fromName($json["current_job_name"]),
         );
     }
 
@@ -58,14 +57,16 @@ class CoreGamePlayerData
         return $this->name;
     }
 
-    /**
-     * @return String[]
-     */
     public function getOwnJobNames(): array {
         return $this->ownJobNames;
     }
 
     public function getCurrentJob(): Job {
         return $this->currentJob;
+    }
+
+    public function updateCurrentJob(Job $job) :void {
+        $this->currentJob->onChangeJob();
+        $this->currentJob = $job;
     }
 }

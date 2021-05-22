@@ -23,12 +23,12 @@ class CoreGamePlayerDataStorage
         self::$dataList[$name] = CoreGamePlayerDataRepository::load($name);
     }
 
-    static function save(string $name): void {
+    static function remove(string $name): void {
         CoreGamePlayerDataRepository::save(self::$dataList[$name]);
         unset(self::$dataList[$name]);
     }
 
-    static function saveAll(): void {
+    static function removeAll(): void {
         foreach (self::$dataList as $data) {
             CoreGamePlayerDataRepository::save($data);
         }
