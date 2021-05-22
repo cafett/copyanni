@@ -35,17 +35,20 @@ class Scout extends Job
     }
 
     public function activateSkill(Player $player): bool {
-        $result = parent::activateSkill($player);
-        if (!$result) return false;
-
         $item = $player->getInventory()->getItemInHand();
         if (!$item->getNamedTag()->offsetExists("hook_id")) {
+            $result = parent::activateSkill($player);
+            if (!$result) return false;
+
             $this->spawnFishingHook($player);
             return true;
         }
 
         $hook = $player->getLevel()->getEntity($item->getNamedTag()->getInt("hook_id"));
         if ($hook === null) {
+            $result = parent::activateSkill($player);
+            if (!$result) return false;
+
             $this->spawnFishingHook($player);
             return true;
         }
