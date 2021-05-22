@@ -8,6 +8,7 @@ use copyanni\block\Ore;
 use copyanni\model\job\Acrobat;
 use copyanni\model\job\Archer;
 use copyanni\model\job\Assassin;
+use copyanni\model\job\Defender;
 use copyanni\model\job\Warrior;
 use copyanni\scoreboard\CoreGameScoreboard;
 use copyanni\service\CoreGameService;
@@ -18,7 +19,6 @@ use game_chef\models\GameStatus;
 use game_chef\models\Score;
 use game_chef\pmmp\bossbar\Bossbar;
 use game_chef\pmmp\events\AddedScoreEvent;
-use game_chef\pmmp\events\AddScoreEvent;
 use game_chef\pmmp\events\FinishedGameEvent;
 use game_chef\pmmp\events\PlayerAttackPlayerEvent;
 use game_chef\pmmp\events\PlayerJoinGameEvent;
@@ -204,15 +204,30 @@ class CoreGameListener implements Listener
         }
     }
 
+    //Defender
     public function onAddedScore(AddedScoreEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
         if (!$gameType->equals(GameTypeList::core())) return;
 
+        $value = $event->getCurrentScore()->getValue();
+        if ($value === 1) {
+            $isTimeToUpdateDefenderHealth = true;
+        } else {
+            $isTimeToUpdateDefenderHealth = ($value % 10 === 1);
+        }
+
         $game = GameChef::findTeamGameById($gameId);
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $player = Server::getInstance()->getPlayer($playerData->getName());
             CoreGameScoreboard::update($player, $game);
+
+            //Defender
+            if ($isTimeToUpdateDefenderHealth) {
+                $corePlayerData = CoreGamePlayerDataStorage::get($player->getName());
+                $job = $corePlayerData->getCurrentJob();
+                if ($job instanceof Defender) $job->updateMaxHealth($player);
+            }
         }
 
         $teamId = $event->getTeamId();
