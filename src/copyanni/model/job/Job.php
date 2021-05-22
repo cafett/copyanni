@@ -12,6 +12,7 @@ use pocketmine\Player;
 use pocketmine\scheduler\ClosureTask;
 use pocketmine\scheduler\TaskHandler;
 
+//todo:スポーンしてすぐにスキルを使えないようにする
 abstract class Job
 {
     const NAME = "";
@@ -37,6 +38,8 @@ abstract class Job
         Miner::NAME,
         Scout::NAME,
         Warrior::NAME,
+        Builder::NAME,
+        Immobilizer::NAME,
     ];
 
     static function fromName(string $name): ?self {
