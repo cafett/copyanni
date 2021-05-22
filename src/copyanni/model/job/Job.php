@@ -54,6 +54,13 @@ abstract class Job
         $this->skillCoolTimePeriod = $skillCoolTimePeriod;
     }
 
+    //todo試合開始時に呼び出す
+    public function activatePassive(Player $player): void {
+        foreach ($this->effects as $effect) {
+            $player->addEffect($effect);
+        }
+    }
+
     public function activateSkill(Player $player): bool {
         if ($this->onCoolTime) {
             $player->sendMessage("あと" . $this->skillCoolTime . "秒");
@@ -86,5 +93,5 @@ abstract class Job
         return $this->effects;
     }
 
-    public function onChangeJob(): void { }
+    public function onChangeJob(Player $player): void { }
 }

@@ -77,7 +77,7 @@ class Assassin extends Job
         }
     }
 
-    public function onChangeJob(): void {
+    public function onChangeJob(Player $player): void {
         $this->cancelSkill();
     }
 }

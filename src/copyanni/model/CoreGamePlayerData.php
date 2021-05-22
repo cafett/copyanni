@@ -5,6 +5,7 @@ namespace copyanni\model;
 
 use copyanni\model\job\Civilian;
 use copyanni\model\job\Job;
+use pocketmine\Server;
 
 class CoreGamePlayerData
 {
@@ -66,7 +67,8 @@ class CoreGamePlayerData
     }
 
     public function updateCurrentJob(Job $job) :void {
-        $this->currentJob->onChangeJob();
+        $player = Server::getInstance()->getPlayer($this->name);
+        $this->currentJob->onChangeJob($player);
         $this->currentJob = $job;
     }
 }
