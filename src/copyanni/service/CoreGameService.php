@@ -9,6 +9,8 @@ use copyanni\GameTypeList;
 use copyanni\storage\CoreGamePlayerDataStorage;
 use game_chef\api\GameChef;
 use game_chef\api\TeamGameBuilder;
+use game_chef\models\Game;
+use game_chef\models\GameId;
 use game_chef\models\Score;
 use game_chef\models\Team;
 use game_chef\models\TeamGame;
@@ -201,16 +203,43 @@ class CoreGameService
             }), 20 * 0.5);
         }
 
-        //todo ハンディーマンの能力はフェーズに影響されるように
-        //今は20パーで回復
         if (CoreGamePlayerDataStorage::get($attacker->getName())->getCurrentJob() instanceof Handyman) {
             if ($attackerTeam->getScore() < Nexus::MAX_HEALTH) {//チームがすでに負けていたら無し
-                if (mt_rand(1, 10) <= 2) {
+                $phase = self::getGamePhase($teamGame->getId());
+                $percent = 0;
+                switch ($phase) {
+                    case 1:
+                        $percent = 0;
+                        break;
+                    case 2:
+                        $percent = 0.20;
+                        break;
+                    case 3:
+                        $percent = 0.15;
+                        break;
+                    case 4:
+                        $percent = 0.10;
+                        break;
+                    case 5:
+                        $percent = 0.07;
+                        break;
+                }
+                if (mt_rand(1, 100) <= $percent * 100) {
                     GameChef::addTeamGameScore($teamGame->getId(), $attackerTeam->getId(), new Score(-1));
                 }
             }
         }
 
         GameChef::addTeamGameScore($teamGame->getId(), $targetTeam->getId(), new Score(1));
+    }
+
+    public static function getGamePhase(GameId $gameId): ?int {
+        $timer = GameChef::findGameTimer($gameId);
+        if ($timer === null) return null;
+
+        $phase = floor($timer->getElapsedTime() / 60 * 10);
+        if ($phase < 1) return 1;
+        if ($phase > 5) return 5;
+        return $phase;
     }
 }
