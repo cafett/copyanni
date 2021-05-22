@@ -27,6 +27,7 @@ use game_chef\pmmp\events\StartedGameEvent;
 use game_chef\pmmp\events\UpdatedGameTimerEvent;
 use game_chef\services\MapService;
 use game_chef\TaskSchedulerStorage;
+use pocketmine\block\BlockIds;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
@@ -70,6 +71,7 @@ class CoreGameListener implements Listener
         $gameType = $event->getGameType();
         if (!$gameType->equals(GameTypeList::core())) return;
 
+        $phase = CoreGameService::getGamePhase($gameId);
         //ボスバーの更新
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $player = Server::getInstance()->getPlayer($playerData->getName());
@@ -79,11 +81,21 @@ class CoreGameListener implements Listener
             //ほぼ１００％前者なので処理を終わらせる
             if ($bossbar === null) return;
 
-            if ($event->getTimeLimit() === null) {
-                $bossbar->updateTitle("経過時間:({$event->getElapsedTime()})");
+            $bossbar->updateTitle("Phase $phase");
+
+            if ($phase === 1) {
+                $bossbar->updatePercentage(1.0 - ($event->getElapsedTime() / 600));
+
+            } else if ($phase >= 5) {
+                $bossbar->updatePercentage(1.0);
+
             } else {
-                $bossbar->updateTitle("{$event->getElapsedTime()}/{$event->getTimeLimit()}");
-                $bossbar->updatePercentage(1 - ($event->getElapsedTime() / $event->getTimeLimit()));
+                $bossbar->updatePercentage(1.0 - (($event->getElapsedTime() - (600 * $phase)) / 600));
+            }
+
+            if ($event->getElapsedTime() % 60 === 0) {
+                //todo:演出
+                $player->sendMessage("phase$phase になりました");
             }
         }
     }
@@ -234,7 +246,7 @@ class CoreGameListener implements Listener
         CoreGameService::initPlayerStatus($player);
     }
 
-    public function onBreakNexus(BlockBreakEvent $event) {
+    public function onBreakBlock(BlockBreakEvent $event) {
         $block = $event->getBlock();
 
         $player = $event->getPlayer();
@@ -280,6 +292,16 @@ class CoreGameListener implements Listener
             $event->setDrops([]);
             CoreGameService::breakNexus($game, $targetTeam, $player, $block->asVector3());
         } else if (in_array($block->getId(), Ore::IDS)) {
+            //ore
+
+            //diamondはphase3から
+            if ($block->getId() === BlockIds::DIAMOND_ORE) {
+                if (CoreGameService::getGamePhase($game->getId()) < 3) {
+                    $event->setCancelled();
+                    return;
+                }
+            }
+
             TaskSchedulerStorage::get()->scheduleDelayedTask(new ClosureTask(function (int $tick) use ($block): void {
                 $block->getLevel()->setBlock($block->asVector3(), $block);
             }), Ore::GENERATING_COOL_TIMES[$block->getId()]);
