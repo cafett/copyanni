@@ -6,7 +6,7 @@ namespace copyanni\model\job;
 
 use Cassandra\Date;
 use copyanni\GameTypeList;
-use copyanni\storage\CoreGamePlayerDataStorage;
+use copyanni\storage\AnniPlayerDataStorage;
 use game_chef\api\GameChef;
 use pocketmine\entity\Effect;
 use pocketmine\entity\EffectInstance;
@@ -39,19 +39,21 @@ class Immobilizer extends Job
         foreach ($player->getLevel()->getPlayers() as $subject) {
             if ($subject->distance($player) <= $distance) {
                 $target = $subject;
-                if (GameChef::isRelatedWith($subject, GameTypeList::core())) {
+                if (GameChef::isRelatedWith($subject, GameTypeList::anni())) {
                     $subjectData = GameChef::findPlayerData($subject->getName());
 
                     if (!$subjectData->getBelongTeamId()->equals($playerData->getBelongTeamId())) {//チーム判定
-                        $subjectCoreGameData = CoreGamePlayerDataStorage::get($subject->getName());
-                        $lastTime = $subjectCoreGameData->getLastImmobilizedTime();
+                        $subjectAnniData = AnniPlayerDataStorage::get($subject->getName());
+                        $lastTime = $subjectAnniData->getLastImmobilizedTime();
 
                         if ($lastTime === null) {//最後に喰らってから15秒以上たっていればOK
                             $distance = $subject->distance($player);
-                            $subjectCoreGameData->setLastImmobilizedTime(new \DateTime());
+                            $target = $subject;
+                            $subjectAnniData->setLastImmobilizedTime(new \DateTime());
                         } else if ((new \DateTime())->diff($lastTime)->s >= 15) {
                             $distance = $subject->distance($player);
-                            $subjectCoreGameData->setLastImmobilizedTime(new \DateTime());
+                            $target = $subject;
+                            $subjectAnniData->setLastImmobilizedTime(new \DateTime());
                         }
                     }
                 }

@@ -12,7 +12,7 @@ use game_chef\pmmp\scoreboard\ScoreSortType;
 use pocketmine\Player;
 use pocketmine\utils\TextFormat;
 
-class CoreGameScoreboard extends Scoreboard
+class AnniGameScoreboard extends Scoreboard
 {
     static function init() {
         self::__setup(ScoreboardSlot::sideBar());

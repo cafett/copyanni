@@ -8,7 +8,7 @@ use copyanni\model\job\Job;
 use DateTime;
 use pocketmine\Server;
 
-class CoreGamePlayerData
+class AnniPlayerData
 {
     private string $name;
     private array $ownJobNames;

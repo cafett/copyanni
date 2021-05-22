@@ -10,10 +10,10 @@ use copyanni\model\job\Archer;
 use copyanni\model\job\Assassin;
 use copyanni\model\job\Defender;
 use copyanni\model\job\Warrior;
-use copyanni\scoreboard\CoreGameScoreboard;
-use copyanni\service\CoreGameService;
+use copyanni\scoreboard\AnniGameScoreboard;
+use copyanni\service\AnniGameService;
 use copyanni\GameTypeList;
-use copyanni\storage\CoreGamePlayerDataStorage;
+use copyanni\storage\AnniPlayerDataStorage;
 use game_chef\api\GameChef;
 use game_chef\models\GameStatus;
 use game_chef\models\Score;
@@ -49,7 +49,7 @@ use pocketmine\scheduler\TaskScheduler;
 use pocketmine\Server;
 use pocketmine\utils\TextFormat;
 
-class CoreGameListener implements Listener
+class AnniGameListener implements Listener
 {
     private TaskScheduler $scheduler;
 
@@ -59,27 +59,27 @@ class CoreGameListener implements Listener
 
     public function onJoin(PlayerJoinEvent $event) {
         $player = $event->getPlayer();
-        CoreGameService::backToLobby($player);
+        AnniGameService::backToLobby($player);
     }
 
     public function onQuitGame(PlayerQuitGameEvent $event) {
         $player = $event->getPlayer();
         $gameType = $event->getGameType();
-        if (!$gameType->equals(GameTypeList::core())) return;
+        if (!$gameType->equals(GameTypeList::anni())) return;
 
-        CoreGameService::backToLobby($player);
+        AnniGameService::backToLobby($player);
     }
 
     public function onUpdatedGameTimer(UpdatedGameTimerEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
-        if (!$gameType->equals(GameTypeList::core())) return;
+        if (!$gameType->equals(GameTypeList::anni())) return;
 
-        $phase = CoreGameService::getGamePhase($gameId);
+        $phase = AnniGameService::getGamePhase($gameId);
         //ボスバーの更新
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $player = Server::getInstance()->getPlayer($playerData->getName());
-            $bossbar = Bossbar::findByType($player, GameTypeList::core()->toBossbarType());
+            $bossbar = Bossbar::findByType($player, GameTypeList::anni()->toBossbarType());
 
             //ボスバーの無い試合 or バグ
             //ほぼ１００％前者なので処理を終わらせる
@@ -107,21 +107,21 @@ class CoreGameListener implements Listener
     public function onStartedGame(StartedGameEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
-        if (!$gameType->equals(GameTypeList::core())) return;
+        if (!$gameType->equals(GameTypeList::anni())) return;
 
         $game = GameChef::findTeamGameById($gameId);
         GameChef::setTeamGamePlayersSpawnPoint($gameId);
 
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $player = Server::getInstance()->getPlayer($playerData->getName());
-            CoreGameService::sendToGame($player, $game);
+            AnniGameService::sendToGame($player, $game);
         }
     }
 
     public function onFinishedGame(FinishedGameEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
-        if (!$gameType->equals(GameTypeList::core())) return;
+        if (!$gameType->equals(GameTypeList::anni())) return;
 
         $winTeam = null;
         $game = GameChef::findGameById($gameId);
@@ -144,7 +144,7 @@ class CoreGameListener implements Listener
                 $player = Server::getInstance()->getPlayer($playerData->getName());
                 if ($player === null) continue;
 
-                CoreGameService::backToLobby($player);
+                AnniGameService::backToLobby($player);
             }
 
             GameChef::discardGame($gameId);
@@ -156,7 +156,7 @@ class CoreGameListener implements Listener
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
         $teamId = $event->getTeamId();
-        if (!$gameType->equals(GameTypeList::core())) return;
+        if (!$gameType->equals(GameTypeList::anni())) return;
 
         $game = GameChef::findGameById($gameId);
         $team = $game->getTeamById($teamId);
@@ -173,7 +173,7 @@ class CoreGameListener implements Listener
         //途中参加
         $game = GameChef::findTeamGameById($gameId);
         if ($game->getStatus()->equals(GameStatus::Started())) {
-            CoreGameService::sendToGame($player, $game);
+            AnniGameService::sendToGame($player, $game);
         }
     }
 
@@ -183,7 +183,7 @@ class CoreGameListener implements Listener
         $attacker = $event->getAttacker();
         $killedPlayer = $event->getKilledPlayer();
 
-        if (!$gameType->equals(GameTypeList::core())) return;
+        if (!$gameType->equals(GameTypeList::anni())) return;
         if ($event->isFriendlyFire()) return;//試合の設定上ありえないけど
 
         $game = GameChef::findTeamGameById($gameId);
@@ -208,7 +208,7 @@ class CoreGameListener implements Listener
     public function onAddedScore(AddedScoreEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
-        if (!$gameType->equals(GameTypeList::core())) return;
+        if (!$gameType->equals(GameTypeList::anni())) return;
 
         $value = $event->getCurrentScore()->getValue();
         if ($value === 1) {
@@ -220,12 +220,12 @@ class CoreGameListener implements Listener
         $game = GameChef::findTeamGameById($gameId);
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $player = Server::getInstance()->getPlayer($playerData->getName());
-            CoreGameScoreboard::update($player, $game);
+            AnniGameScoreboard::update($player, $game);
 
             //Defender
             if ($isTimeToUpdateDefenderHealth) {
-                $corePlayerData = CoreGamePlayerDataStorage::get($player->getName());
-                $job = $corePlayerData->getCurrentJob();
+                $playerAnniData = AnniPlayerDataStorage::get($player->getName());
+                $job = $playerAnniData->getCurrentJob();
                 if ($job instanceof Defender) $job->updateMaxHealth($player);
             }
         }
@@ -264,10 +264,10 @@ class CoreGameListener implements Listener
     //Assassin
     public function onPlayerDeath(PlayerDeathEvent $event) {
         $player = $event->getPlayer();
-        if (!GameChef::isRelatedWith($player, GameTypeList::core())) return;
+        if (!GameChef::isRelatedWith($player, GameTypeList::anni())) return;
 
-        $playerCoreGameData = CoreGamePlayerDataStorage::get($player->getName());
-        $job = $playerCoreGameData->getCurrentJob();
+        $playerAnniData = AnniPlayerDataStorage::get($player->getName());
+        $job = $playerAnniData->getCurrentJob();
         if ($job instanceof Assassin) $job->cancelSkill();
 
         $playerData = GameChef::findPlayerData($player->getName());
@@ -283,9 +283,9 @@ class CoreGameListener implements Listener
 
     public function onPlayerReSpawn(PlayerRespawnEvent $event) {
         $player = $event->getPlayer();
-        if (!GameChef::isRelatedWith($player, GameTypeList::core())) return;
+        if (!GameChef::isRelatedWith($player, GameTypeList::anni())) return;
 
-        CoreGameService::initPlayerStatus($player);
+        AnniGameService::initPlayerStatus($player);
     }
 
     public function onBreakBlock(BlockBreakEvent $event) {
@@ -303,8 +303,8 @@ class CoreGameListener implements Listener
 
         $game = GameChef::findGameById($playerData->getBelongGameId());
 
-        //core game じゃなかったら
-        if (!$game->getType()->equals(GameTypeList::core())) return;
+        //anni じゃなかったら
+        if (!$game->getType()->equals(GameTypeList::anni())) return;
 
         //nexus
         if ($block->getId() === Nexus::ID) {
@@ -332,13 +332,13 @@ class CoreGameListener implements Listener
             }
 
             $event->setDrops([]);
-            CoreGameService::breakNexus($game, $targetTeam, $player, $block->asVector3());
+            AnniGameService::breakNexus($game, $targetTeam, $player, $block->asVector3());
         } else if (in_array($block->getId(), Ore::IDS)) {
             //ore
 
             //diamondはphase3から
             if ($block->getId() === BlockIds::DIAMOND_ORE) {
-                if (CoreGameService::getGamePhase($game->getId()) < 3) {
+                if (AnniGameService::getGamePhase($game->getId()) < 3) {
                     $event->setCancelled();
                     return;
                 }
@@ -360,7 +360,7 @@ class CoreGameListener implements Listener
         if ($playerData->getBelongGameId() === null) return;
 
         $game = GameChef::findGameById($playerData->getBelongGameId());
-        if (!$game->getType()->equals(GameTypeList::core())) return;
+        if (!$game->getType()->equals(GameTypeList::anni())) return;
 
         if (!$this->isCanPlace($event->getBlock()->getId())) {
             if (!$player->isOp() and $player->getGamemode() !== Player::CREATIVE) {
@@ -384,7 +384,7 @@ class CoreGameListener implements Listener
         if ($arrow instanceof \pocketmine\entity\projectile\Arrow) {
             $shooter = $arrow->getOwningEntity();
             if ($shooter instanceof Player) {
-                $shooterData = CoreGamePlayerDataStorage::get($shooter);
+                $shooterData = AnniPlayerDataStorage::get($shooter);
                 if ($shooterData->getCurrentJob()::NAME === Archer::NAME) {
                     $arrow->setBaseDamage($arrow->getBaseDamage() + 1);
                 }
@@ -394,10 +394,10 @@ class CoreGameListener implements Listener
 
     //Warrior Assassin
     public function onPlayerAttackPlayer(PlayerAttackPlayerEvent $event) {
-        if (!$event->getGameType()->equals(GameTypeList::core())) return;
+        if (!$event->getGameType()->equals(GameTypeList::anni())) return;
 
         $attacker = $event->getAttacker();
-        $attackerData = CoreGamePlayerDataStorage::get($attacker->getName());
+        $attackerData = AnniPlayerDataStorage::get($attacker->getName());
         $attackerJob = $attackerData->getCurrentJob();
         //Warriorならダメージ+1, Skill発動中ならさらに+1
         if ($attackerJob instanceof Warrior) {
@@ -411,7 +411,7 @@ class CoreGameListener implements Listener
         }
 
         //Assassinならスキルをキャンセルする
-        $targetJob = CoreGamePlayerDataStorage::get($attacker->getName())->getCurrentJob();
+        $targetJob = AnniPlayerDataStorage::get($attacker->getName())->getCurrentJob();
         if ($targetJob instanceof Assassin) {
             $targetJob->cancelSkill();
             $targetJob->reverseArmor($event->getTarget()->getName());
@@ -422,7 +422,7 @@ class CoreGameListener implements Listener
     public function onJump(PlayerJumpEvent $event) {
         $player = $event->getPlayer();
 
-        $playerData = CoreGamePlayerDataStorage::get($player->getName());
+        $playerData = AnniPlayerDataStorage::get($player->getName());
         if ($playerData->getCurrentJob() instanceof Acrobat) {
             $player->setAllowFlight(true);
         }
@@ -431,7 +431,7 @@ class CoreGameListener implements Listener
     //Acrobat
     public function onToggleFlight(PlayerToggleFlightEvent $event) {
         $player = $event->getPlayer();
-        $playerData = CoreGamePlayerDataStorage::get($player->getName());
+        $playerData = AnniPlayerDataStorage::get($player->getName());
         if ($playerData->getCurrentJob() instanceof Acrobat) {
             $player->setFlying(false);
             $playerData->getCurrentJob()->activateSkill($player);
@@ -444,7 +444,7 @@ class CoreGameListener implements Listener
         if ($event->getCause() === EntityDamageEvent::CAUSE_FALL) {
             $entity = $event->getEntity();
             if ($entity instanceof Player) {
-                $playerData = CoreGamePlayerDataStorage::get($entity->getName());
+                $playerData = AnniPlayerDataStorage::get($entity->getName());
                 $job = $playerData->getCurrentJob();
                 if ($job instanceof Acrobat) {
                     $event->setCancelled();

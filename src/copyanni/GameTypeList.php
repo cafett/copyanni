@@ -8,7 +8,7 @@ use game_chef\models\GameType;
 
 class GameTypeList
 {
-    static function core(): GameType {
-        return new GameType("CorePVP");
+    static function anni(): GameType {
+        return new GameType("anni");
     }
 }

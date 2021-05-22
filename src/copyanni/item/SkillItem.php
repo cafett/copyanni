@@ -4,7 +4,7 @@
 namespace copyanni\item;
 
 
-use copyanni\storage\CoreGamePlayerDataStorage;
+use copyanni\storage\AnniPlayerDataStorage;
 use game_chef\api\GameChef;
 use pocketmine\block\Block;
 use pocketmine\item\Item;
@@ -38,21 +38,21 @@ class SkillItem extends Item
     protected function use(Player $player, ?Block $block = null, ?Player $target = null): bool {
         $playerData = GameChef::findPlayerData($player->getName());
 
-        //todo:coreゲーム以外で使えなくする
+        //todo:anniゲーム以外で使えなくする
         if ($playerData->getBelongGameId() === null) {
             $player->sendMessage("this item can be used on Game");
             $player->getInventory()->remove($this);
             return false;
         }
 
-        $playerCoreGameData = CoreGamePlayerDataStorage::get($player->getName());
-        if ($playerCoreGameData->getCurrentJob()::NAME !== self::JOB_NAME) {
+        $playerAnniData = AnniPlayerDataStorage::get($player->getName());
+        if ($playerAnniData->getCurrentJob()::NAME !== self::JOB_NAME) {
             $player->sendMessage("you cannot use this item because of your job. this item can be used by only " . self::JOB_NAME);
             $player->getInventory()->remove($this);
             return false;
         }
 
-        $playerCoreGameData->getCurrentJob()->activateSkill($player);
+        $playerAnniData->getCurrentJob()->activateSkill($player);
         return true;
     }
 }

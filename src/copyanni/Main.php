@@ -3,9 +3,9 @@
 namespace copyanni;
 
 use copyanni\entity\FishingHook;
-use copyanni\listener\CoreGameListener;
-use copyanni\scoreboard\CoreGameScoreboard;
-use copyanni\storage\CoreGamePlayerDataStorage;
+use copyanni\listener\AnniGameListener;
+use copyanni\scoreboard\AnniGameScoreboard;
+use copyanni\storage\AnniPlayerDataStorage;
 use pocketmine\entity\Entity;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
@@ -16,9 +16,9 @@ class Main extends PluginBase implements Listener
 {
     public function onEnable() {
         DataPath::init($this->getDataFolder());
-        CoreGameScoreboard::init();
+        AnniGameScoreboard::init();
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
-        $this->getServer()->getPluginManager()->registerEvents(new CoreGameListener($this->getScheduler()), $this);
+        $this->getServer()->getPluginManager()->registerEvents(new AnniGameListener($this->getScheduler()), $this);
         Entity::registerEntity(FishingHook::class, true, ["FishingHook", Entity::FISHING_HOOK]);
     }
 
@@ -28,6 +28,6 @@ class Main extends PluginBase implements Listener
         $event->getPlayer()->sendDataPacket($pk);
 
         $player = $event->getPlayer();
-        CoreGamePlayerDataStorage::loadFromRepository($player->getName());
+        AnniPlayerDataStorage::loadFromRepository($player->getName());
     }
 }

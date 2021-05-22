@@ -4,9 +4,9 @@ namespace copyanni\service;
 
 use copyanni\block\Nexus;
 use copyanni\model\job\Handyman;
-use copyanni\scoreboard\CoreGameScoreboard;
+use copyanni\scoreboard\AnniGameScoreboard;
 use copyanni\GameTypeList;
-use copyanni\storage\CoreGamePlayerDataStorage;
+use copyanni\storage\AnniPlayerDataStorage;
 use game_chef\api\GameChef;
 use game_chef\api\TeamGameBuilder;
 use game_chef\models\GameId;
@@ -22,7 +22,7 @@ use pocketmine\scheduler\TaskScheduler;
 use pocketmine\Server;
 use pocketmine\utils\TextFormat;
 
-class CoreGameService
+class AnniGameService
 {
     private static TaskScheduler $scheduler;
 
@@ -34,7 +34,7 @@ class CoreGameService
         $builder = new TeamGameBuilder();
         try {
             $builder->setNumberOfTeams(2);
-            $builder->setGameType(GameTypeList::core());
+            $builder->setGameType(GameTypeList::anni());
             $builder->setTimeLimit(null);
             $builder->setVictoryScore(null);
             $builder->setCanJumpIn(true);
@@ -53,9 +53,9 @@ class CoreGameService
     }
 
     public static function createGame(): void {
-        $mapNames = GameChef::getTeamGameMapNamesByType(GameTypeList::core());
+        $mapNames = GameChef::getTeamGameMapNamesByType(GameTypeList::anni());
         if (count($mapNames) === 0) {
-            throw new \LogicException(GameTypeList::core() . "に対応したマップを作成してください");
+            throw new \LogicException(GameTypeList::anni() . "に対応したマップを作成してください");
         }
 
         $mapName = $mapNames[rand(0, count($mapNames) - 1)];
@@ -71,11 +71,11 @@ class CoreGameService
         $player->teleport(Position::fromObject($player->getSpawn(), $level));
 
         //ボスバー
-        $bossbar = new Bossbar($player, GameTypeList::core()->toBossbarType(), "", 1.0);
+        $bossbar = new Bossbar($player, GameTypeList::anni()->toBossbarType(), "", 1.0);
         $bossbar->send();
 
         //スコアボード
-        CoreGameScoreboard::send($player, $game);
+        AnniGameScoreboard::send($player, $game);
 
         self::initPlayerStatus($player);
 
@@ -111,14 +111,14 @@ class CoreGameService
         }
 
         //スコアボード削除
-        CoreGameScoreboard::delete($player);
+        AnniGameScoreboard::delete($player);
 
         //ネームタグリセット
         $player->setNameTag($player->getName());
     }
 
     public static function initPlayerStatus(Player $player): void {
-        $playerData = CoreGamePlayerDataStorage::get($player->getName());
+        $playerData = AnniPlayerDataStorage::get($player->getName());
         $job = $playerData->getCurrentJob();
 
         //エフェクト
@@ -132,13 +132,13 @@ class CoreGameService
 
     //参加できる試合を探し、参加するように
     public static function randomJoin(Player $player): void {
-        $games = GameChef::getGamesByType(GameTypeList::core());
+        $games = GameChef::getGamesByType(GameTypeList::anni());
         if (count($games) === 0) {
             self::createGame();
         }
 
         //todo gamechefに前回のゲームIDとチームIDを記録し、それを使い再度参加する場合はそのチームにするように(負けたチームの場合その試合には参加できない)
-        $games = GameChef::getGamesByType(GameTypeList::core());
+        $games = GameChef::getGamesByType(GameTypeList::anni());
         $game = $games[0];
         $team = $game->getTeams()[0];
         $result = GameChef::joinTeamGame($player, $game->getId(), $team->getId(), true);
@@ -181,7 +181,7 @@ class CoreGameService
             }
         }
 
-        if (CoreGamePlayerDataStorage::get($attacker->getName())->getCurrentJob() instanceof Handyman) {
+        if (AnniPlayerDataStorage::get($attacker->getName())->getCurrentJob() instanceof Handyman) {
             if ($attackerTeam->getScore() < Nexus::MAX_HEALTH) {//チームがすでに負けていたら無し
                 $phase = self::getGamePhase($teamGame->getId());
                 $percent = 0;
