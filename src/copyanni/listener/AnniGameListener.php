@@ -5,6 +5,7 @@ namespace copyanni\listener;
 
 use copyanni\block\Nexus;
 use copyanni\block\Ore;
+use copyanni\item\Hammer;
 use copyanni\model\job\Acrobat;
 use copyanni\model\job\Archer;
 use copyanni\model\job\Assassin;
@@ -13,6 +14,7 @@ use copyanni\model\job\Lumberjack;
 use copyanni\model\job\Miner;
 use copyanni\model\job\Pyro;
 use copyanni\model\job\Warrior;
+use copyanni\PlayerDeviceDataStorage;
 use copyanni\scoreboard\AnniGameScoreboard;
 use copyanni\service\AnniGameService;
 use copyanni\GameTypeList;
@@ -41,6 +43,7 @@ use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityShootBowEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerDeathEvent;
+use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerJumpEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
@@ -351,7 +354,7 @@ class AnniGameListener implements Listener
 
             $playerAnniData = AnniPlayerDataStorage::get($player->getName());
             if ($playerAnniData->getCurrentJob() instanceof Miner) {
-                if ($block->getId() === BlockIds::IRON_ORE or $block->getId() === BlockIds::GOLD_ORE){
+                if ($block->getId() === BlockIds::IRON_ORE or $block->getId() === BlockIds::GOLD_ORE) {
                     $count = mt_rand(1, 10) <= 8 ? 2 : 1;//80%で２個
                     $event->setDrops([Item::get($block->getItemId(), $block->getDamage(), $count)]);
                 }
@@ -493,6 +496,30 @@ class AnniGameListener implements Listener
                 if ($job instanceof Assassin) {
                     if ($job->isOnLeap()) {
                         $event->setCancelled();
+                    }
+                }
+            }
+        }
+    }
+
+    //Thor→PC:右クリック TAP:半径2m以内のブロックタップ
+    public function onPlayerInteract(PlayerInteractEvent $event) {
+        $player = $event->getPlayer();
+        if ($event->getAction() === PlayerInteractEvent::RIGHT_CLICK_AIR) {
+            $item = $player->getInventory()->getItemInHand();
+            if ($item instanceof Hammer) {
+                if (!PlayerDeviceDataStorage::isTap($player)) {
+                    $item->rightClick($player);
+                    return;
+                }
+            }
+        } else if (in_array($event->getAction(), [PlayerInteractEvent::LEFT_CLICK_BLOCK, PlayerInteractEvent::RIGHT_CLICK_BLOCK])) {
+            $item = $player->getInventory()->getItemInHand();
+            if ($item instanceof Hammer) {
+                if (PlayerDeviceDataStorage::isTap($player)) {
+                    if ($event->getBlock()->distance($player) <= 2) {
+                        $item->rightClick($player);
+                        return;
                     }
                 }
             }
