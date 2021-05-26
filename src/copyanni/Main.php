@@ -10,7 +10,9 @@ use copyanni\storage\AnniPlayerDataStorage;
 use pocketmine\entity\Entity;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
+use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\network\mcpe\protocol\GameRulesChangedPacket;
+use pocketmine\network\mcpe\protocol\LoginPacket;
 use pocketmine\plugin\PluginBase;
 
 class Main extends PluginBase implements Listener
@@ -31,5 +33,12 @@ class Main extends PluginBase implements Listener
 
         $player = $event->getPlayer();
         AnniPlayerDataStorage::loadFromRepository($player->getName());
+    }
+
+    public function onPacketReceived(DataPacketReceiveEvent $event) {
+        $packet = $event->getPacket();
+        if ($packet instanceof LoginPacket) {
+            PlayerDeviceDataStorage::save($packet);
+        }
     }
 }
