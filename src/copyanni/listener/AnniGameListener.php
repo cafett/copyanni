@@ -9,6 +9,8 @@ use copyanni\model\job\Acrobat;
 use copyanni\model\job\Archer;
 use copyanni\model\job\Assassin;
 use copyanni\model\job\Defender;
+use copyanni\model\job\Lumberjack;
+use copyanni\model\job\Miner;
 use copyanni\model\job\Warrior;
 use copyanni\scoreboard\AnniGameScoreboard;
 use copyanni\service\AnniGameService;
@@ -42,6 +44,9 @@ use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerJumpEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\event\player\PlayerToggleFlightEvent;
+use pocketmine\item\Armor;
+use pocketmine\item\Axe;
+use pocketmine\item\Item;
 use pocketmine\level\particle\ExplodeParticle;
 use pocketmine\Player;
 use pocketmine\scheduler\ClosureTask;
@@ -126,7 +131,7 @@ class AnniGameListener implements Listener
         $winTeam = null;
         $game = GameChef::findGameById($gameId);
         foreach ($game->getTeams() as $team) {
-            if ($team->getScore()->getValue() < Nexus::MAX_HEALTH)  $winTeam = $team;
+            if ($team->getScore()->getValue() < Nexus::MAX_HEALTH) $winTeam = $team;
         }
 
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
@@ -288,6 +293,7 @@ class AnniGameListener implements Listener
         AnniGameService::initPlayerStatus($player);
     }
 
+    //Miner Lumberjack
     public function onBreakBlock(BlockBreakEvent $event) {
         $block = $event->getBlock();
 
@@ -333,9 +339,7 @@ class AnniGameListener implements Listener
 
             $event->setDrops([]);
             AnniGameService::breakNexus($game, $targetTeam, $player, $block->asVector3());
-        } else if (in_array($block->getId(), Ore::IDS)) {
-            //ore
-
+        } else if (in_array($block->getId(), Ore::IDS)) {//ore
             //diamondはphase3から
             if ($block->getId() === BlockIds::DIAMOND_ORE) {
                 if (AnniGameService::getGamePhase($game->getId()) < 3) {
@@ -344,10 +348,27 @@ class AnniGameListener implements Listener
                 }
             }
 
+            $playerAnniData = AnniPlayerDataStorage::get($player->getName());
+            if ($playerAnniData->getCurrentJob() instanceof Miner) {
+                if ($block->getId() === BlockIds::IRON_ORE or $block->getId() === BlockIds::GOLD_ORE){
+                    $count = mt_rand(1, 10) <= 8 ? 2 : 1;//80%で２個
+                    $event->setDrops([Item::get($block->getItemId(), $block->getDamage(), $count)]);
+                }
+            }
+
             TaskSchedulerStorage::get()->scheduleDelayedTask(new ClosureTask(function (int $tick) use ($block): void {
                 $block->getLevel()->setBlock($block->asVector3(), $block);
             }), Ore::GENERATING_COOL_TIMES[$block->getId()]);
+        } else if ($block->getId() === BlockIds::LOG) {//log
+            $playerAnniData = AnniPlayerDataStorage::get($player->getName());
+            if ($playerAnniData->getCurrentJob() instanceof Lumberjack) {
+                $count = mt_rand(1, 10) <= 8 ? 2 : 1;//80%で２個
+                $event->setDrops([Item::get($block->getItemId(), $block->getDamage(), $count)]);
+            }
         }
+
+        $player->getInventory()->addItem($event->getDrops());
+        $event->setDrops([]);
     }
 
     public function onPlaceBlock(BlockPlaceEvent $event) {
@@ -392,10 +413,11 @@ class AnniGameListener implements Listener
         }
     }
 
-    //Warrior Assassin
+    //Warrior Assassin Lumberjack
     public function onPlayerAttackPlayer(PlayerAttackPlayerEvent $event) {
         if (!$event->getGameType()->equals(GameTypeList::anni())) return;
 
+        $target = $event->getTarget();
         $attacker = $event->getAttacker();
         $attackerData = AnniPlayerDataStorage::get($attacker->getName());
         $attackerJob = $attackerData->getCurrentJob();
@@ -404,14 +426,23 @@ class AnniGameListener implements Listener
             $additionalDamage = 1;
             if ($attackerJob->isOnFrenzy()) $additionalDamage++;
 
-            $target = $event->getTarget();
             $source = new EntityDamageByEntityEvent($attacker, $target, $event->getCause(), $event->getBaseDamage(), [], $event->getKnockBack());
             $target->setLastDamageCause($source);
             $target->setHealth($target->getHealth() - $additionalDamage);
+        } else if ($attackerJob instanceof Lumberjack) {//Lumberjack
+            //スキル発動中かつ斧での攻撃なら耐久値を16削る
+            if ($attackerJob->isOnBruteForce() and $attacker->getInventory()->getItemInHand()->getId() instanceof Axe) {
+                foreach ($target->getArmorInventory()->getContents() as $item) {
+                    if ($item instanceof Armor) {
+                        $item->applyDamage(16);
+                        //todo:音とエフェクト
+                    }
+                }
+            }
         }
 
         //Assassinならスキルをキャンセルする
-        $targetJob = AnniPlayerDataStorage::get($attacker->getName())->getCurrentJob();
+        $targetJob = AnniPlayerDataStorage::get($target->getName())->getCurrentJob();
         if ($targetJob instanceof Assassin) {
             $targetJob->cancelSkill();
             $targetJob->reverseArmor($event->getTarget()->getName());
