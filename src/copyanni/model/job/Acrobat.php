@@ -10,7 +10,7 @@ use pocketmine\Player;
 
 class Acrobat extends Job
 {
-    const NAME = "Archer";
+    const NAME = "Acrobat";
     const DESCRIPTION = "";
 
     public function __construct() {

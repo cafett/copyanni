@@ -27,25 +27,30 @@ abstract class Job
     protected float $skillCoolTime;
     protected float $skillCoolTimePeriod;
 
-    const JOBS = [
-        Acrobat::NAME,
-        Archer::NAME,
-        Assassin::NAME,
-        Builder::NAME,
-        Civilian::NAME,
-        Handyman::NAME,
-        Healer::NAME,
-        Miner::NAME,
-        Scout::NAME,
-        Warrior::NAME,
-        Builder::NAME,
-        Immobilizer::NAME,
+    const JOB_CLASS_NAMES = [
+        Acrobat::NAME => Acrobat::class,
+        Archer::NAME => Archer::class,
+        Assassin::NAME => Assassin::class,
+        Builder::NAME => Builder::class,
+        Civilian::NAME => Civilian::class,
+        Defender::NAME => Defender::class,
+        Handyman::NAME => Handyman::class,
+        Healer::NAME => Healer::class,
+        Immobilizer::NAME => Immobilizer::class,
+        Lumberjack::NAME => Lumberjack::class,
+        Miner::NAME => Miner::class,
+        Pyro::NAME => Pyro::class,
+        Scorpio::NAME => Scorpio::class,
+        Scout::NAME => Scout::class,
+        Warrior::NAME => Warrior::class,
     ];
 
     static function fromName(string $name): ?self {
-        if (in_array($name, self::JOBS)) {
-            return new $name();
+        if (key_exists($name, self::JOB_CLASS_NAMES)) {
+            $class = self::JOB_CLASS_NAMES[$name];
+            return new $class();
         }
+
         return null;
     }
 

@@ -16,7 +16,7 @@ use pocketmine\Player;
 
 class Healer extends Job
 {
-    const NAME = "Handyman";
+    const NAME = "Healer";
     const DESCRIPTION = "";
 
     public function __construct() {
