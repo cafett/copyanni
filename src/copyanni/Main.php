@@ -3,6 +3,7 @@
 namespace copyanni;
 
 use copyanni\entity\FishingHook;
+use copyanni\entity\ScorpioHookEntity;
 use copyanni\listener\AnniGameListener;
 use copyanni\scoreboard\AnniGameScoreboard;
 use copyanni\storage\AnniPlayerDataStorage;
@@ -20,6 +21,7 @@ class Main extends PluginBase implements Listener
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
         $this->getServer()->getPluginManager()->registerEvents(new AnniGameListener($this->getScheduler()), $this);
         Entity::registerEntity(FishingHook::class, true, ["FishingHook", Entity::FISHING_HOOK]);
+        Entity::registerEntity(ScorpioHookEntity::class, true, ["ScorpioHookEntity"]);
     }
 
     public function onJoin(PlayerJoinEvent $event) {
