@@ -11,6 +11,7 @@ use copyanni\model\job\Assassin;
 use copyanni\model\job\Defender;
 use copyanni\model\job\Lumberjack;
 use copyanni\model\job\Miner;
+use copyanni\model\job\Pyro;
 use copyanni\model\job\Warrior;
 use copyanni\scoreboard\AnniGameScoreboard;
 use copyanni\service\AnniGameService;
@@ -397,23 +398,26 @@ class AnniGameListener implements Listener
         return true;
     }
 
-    //Archer
+    //Archer Pyro
     public function onDamageByShooting(EntityShootBowEvent $event) {
         $arrow = $event->getEntity();
 
-        //職業がArcherなら、与えるダメージ + 1
         if ($arrow instanceof \pocketmine\entity\projectile\Arrow) {
             $shooter = $arrow->getOwningEntity();
+            //職業がArcherなら、与えるダメージ + 1
             if ($shooter instanceof Player) {
                 $shooterData = AnniPlayerDataStorage::get($shooter);
-                if ($shooterData->getCurrentJob()::NAME === Archer::NAME) {
+                $job = $shooterData->getCurrentJob();
+                if ($job instanceof Archer) {
                     $arrow->setBaseDamage($arrow->getBaseDamage() + 1);
+                } else if ($shooter instanceof Pyro) {
+                    $arrow->setOnFire(intdiv($arrow->getFireTicks(), 20) + 100);//Bowから引用
                 }
             }
         }
     }
 
-    //Warrior Assassin Lumberjack
+    //Warrior Assassin Lumberjack Pyro
     public function onPlayerAttackPlayer(PlayerAttackPlayerEvent $event) {
         if (!$event->getGameType()->equals(GameTypeList::anni())) return;
 
@@ -438,6 +442,11 @@ class AnniGameListener implements Listener
                         //todo:音とエフェクト
                     }
                 }
+            }
+        } else if ($attackerJob instanceof Pyro) {
+            //Pyroなら37%の確立で相手に火をつける
+            if (mt_rand(1, 100) <= 37) {
+                $target->setOnFire(2);
             }
         }
 
