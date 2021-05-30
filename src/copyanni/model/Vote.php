@@ -5,6 +5,7 @@ namespace copyanni\model;
 
 
 use copyanni\GameTypeList;
+use copyanni\item\hotbar_menu\VoteHotbarMenu;
 use copyanni\service\AnniGameService;
 use copyanni\service\VoteMapService;
 use game_chef\api\GameChef;
@@ -58,6 +59,9 @@ class Vote
             $level = VoteMapService::getVoteLevel($this->id);
             $player->teleport($level->getSpawnLocation());
 
+            $menu = new VoteHotbarMenu($player, $this);
+            $menu->send();
+
             //16人以上なら1分後にマップ選択を締め切り、チーム選択を開始する
             if (count($this->mapVotes) >= 16) {
                 $this->handler = TaskSchedulerStorage::get()->scheduleDelayedTask(new ClosureTask(function (int $tick): void {
@@ -83,6 +87,9 @@ class Vote
 
             foreach (VoteMapService::getVoteLevel($this->id)->getPlayers() as $player) {
                 $player->sendMessage("マップは" . $selectedMapName . "に決まりました");
+
+                $menu = new VoteHotbarMenu($player, $this);
+                $menu->send();
             }
             $this->status = VoteStatus::TeamSelect();
 
@@ -140,5 +147,13 @@ class Vote
         } else {
             return "人数:" . count($this->mapVotes);//todo:改善する
         }
+    }
+
+    public function getStatus(): VoteStatus {
+        return $this->status;
+    }
+
+    public function getMapOptions(): array {
+        return $this->mapOptions;
     }
 }
