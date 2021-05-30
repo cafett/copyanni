@@ -18,22 +18,15 @@ use pocketmine\entity\Attribute;
 use pocketmine\level\Position;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
-use pocketmine\scheduler\TaskScheduler;
 use pocketmine\Server;
 use pocketmine\utils\TextFormat;
 
 class AnniGameService
 {
-    private static TaskScheduler $scheduler;
-
-    public static function setScheduler(TaskScheduler $scheduler): void {
-        self::$scheduler = $scheduler;
-    }
-
-    public static function buildGame(string $mapName): void {
+    public static function buildGame(string $mapName): ?GameId {
         $builder = new TeamGameBuilder();
         try {
-            $builder->setNumberOfTeams(2);
+            $builder->setNumberOfTeams(4);
             $builder->setGameType(GameTypeList::anni());
             $builder->setTimeLimit(null);
             $builder->setVictoryScore(null);
@@ -46,20 +39,11 @@ class AnniGameService
 
             $game = $builder->build();
             GameChef::registerGame($game);
+            return $game->getId();
         } catch (\Exception $e) {
             Server::getInstance()->getLogger()->error($e->getMessage());
+            return null;
         }
-
-    }
-
-    public static function createGame(): void {
-        $mapNames = GameChef::getTeamGameMapNamesByType(GameTypeList::anni());
-        if (count($mapNames) === 0) {
-            throw new \LogicException(GameTypeList::anni() . "に対応したマップを作成してください");
-        }
-
-        $mapName = $mapNames[rand(0, count($mapNames) - 1)];
-        self::buildGame($mapName);
     }
 
     public static function sendToGame(Player $player, TeamGame $game): void {
@@ -88,22 +72,14 @@ class AnniGameService
     }
 
     public static function backToLobby(Player $player): void {
+        self::resetPlayerStatus($player);
         $level = Server::getInstance()->getDefaultLevel();
         $player->teleport($level->getSpawnLocation());
+    }
+
+    public static function resetPlayerStatus(Player $player): void {
         $player->getAttributeMap()->getAttribute(Attribute::MOVEMENT_SPEED)->setValue(0.1);
         $player->removeAllEffects();
-
-        //$menu = new HotbarMenu($player, [
-        //    new HotbarMenuItem(
-        //        ItemIds::EMERALD,
-        //        0,
-        //        TextFormat::GREEN . "試合に参加",
-        //        function (Player $player) {
-        //            self::randomJoin($player);
-        //        }
-        //    )
-        //]);
-        //$menu->send();
 
         //ボスバー削除
         foreach (Bossbar::getBossbars($player) as $bossbar) {
@@ -128,29 +104,6 @@ class AnniGameService
 
         //インベントリ
         $player->getInventory()->setContents($job->getInitialInventory());
-    }
-
-    //参加できる試合を探し、参加するように
-    public static function randomJoin(Player $player): void {
-        $games = GameChef::getGamesByType(GameTypeList::anni());
-        if (count($games) === 0) {
-            self::createGame();
-        }
-
-        //todo gamechefに前回のゲームIDとチームIDを記録し、それを使い再度参加する場合はそのチームにするように(負けたチームの場合その試合には参加できない)
-        $games = GameChef::getGamesByType(GameTypeList::anni());
-        $game = $games[0];
-        $team = $game->getTeams()[0];
-        $result = GameChef::joinTeamGame($player, $game->getId(), $team->getId(), true);
-        if (!$result) {
-            $player->sendMessage("試合に参加できませんでした");
-            return;
-        }
-
-        //2人以上なら試合開始
-        if (count(GameChef::getPlayerDataList($game->getId())) >= 2) {
-            GameChef::startGame($game->getId());
-        }
     }
 
     static function breakNexus(TeamGame $teamGame, Team $targetTeam, Player $attacker, Vector3 $nexusPosition): void {
@@ -219,5 +172,14 @@ class AnniGameService
         if ($phase < 1) return 1;
         if ($phase > 5) return 5;
         return $phase;
+    }
+
+    public static function generateDetailText(TeamGame $game): string {
+        $text = "map:{$game->getMap()->getName()},";
+        $text .= "phase:" . AnniGameService::getGamePhase($game->getId()) . "\n";
+        foreach ($game->getTeams() as $team) {
+            $text .= $team->getTeamColorFormat() . $team->getName() . TextFormat::RESET . ":" . Nexus::MAX_HEALTH - $team->getScore()->getValue() . ",";
+        }
+        return $text;
     }
 }

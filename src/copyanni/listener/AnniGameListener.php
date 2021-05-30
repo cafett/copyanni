@@ -19,6 +19,7 @@ use copyanni\scoreboard\AnniGameScoreboard;
 use copyanni\service\AnniGameService;
 use copyanni\GameTypeList;
 use copyanni\storage\AnniPlayerDataStorage;
+use copyanni\storage\VoteStorage;
 use game_chef\api\GameChef;
 use game_chef\models\GameStatus;
 use game_chef\models\Score;
@@ -109,6 +110,12 @@ class AnniGameListener implements Listener
             if ($event->getElapsedTime() % 60 === 0) {
                 //todo:演出
                 $player->sendMessage("phase$phase になりました");
+
+                //voteの更新
+                if ($phase === 3) {
+                    $vote = VoteStorage::getByGameId($gameId);
+                    $vote->declineNewPlayers();
+                }
             }
         }
     }
@@ -131,6 +138,12 @@ class AnniGameListener implements Listener
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
         if (!$gameType->equals(GameTypeList::anni())) return;
+
+        //voteを削除
+        $vote = VoteStorage::getByGameId($gameId);
+        if ($vote !== null) {
+            VoteStorage::delete($vote->getId());
+        }
 
         $winTeam = null;
         $game = GameChef::findGameById($gameId);
