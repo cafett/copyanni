@@ -25,7 +25,10 @@ use pocketmine\plugin\PluginBase;
 class Main extends PluginBase implements Listener
 {
     public function onEnable() {
-        $this->reloadConfig();
+        if (!$this->getConfig()->exists(VoteMapService::VoteWoldKey)) {
+            $this->getConfig()->set(VoteMapService::VoteWoldKey, "");
+            $this->getConfig()->save();
+        }
         VoteMapService::init($this->getConfig()->get(VoteMapService::VoteWoldKey, ""));
 
         DataPath::init($this->getDataFolder());
