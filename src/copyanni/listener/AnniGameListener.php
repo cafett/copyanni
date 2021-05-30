@@ -14,7 +14,7 @@ use copyanni\model\job\Lumberjack;
 use copyanni\model\job\Miner;
 use copyanni\model\job\Pyro;
 use copyanni\model\job\Warrior;
-use copyanni\PlayerDeviceDataStorage;
+use copyanni\storage\PlayerDeviceDataStorage;
 use copyanni\scoreboard\AnniGameScoreboard;
 use copyanni\service\AnniGameService;
 use copyanni\GameTypeList;

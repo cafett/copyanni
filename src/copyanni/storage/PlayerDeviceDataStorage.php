@@ -1,6 +1,6 @@
 <?php
 
-namespace copyanni;
+namespace copyanni\storage;
 
 use pocketmine\network\mcpe\protocol\LoginPacket;
 use pocketmine\Player;

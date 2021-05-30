@@ -4,7 +4,6 @@
 namespace copyanni\form;
 
 
-use copyanni\model\Vote;
 use copyanni\model\VoteId;
 use copyanni\storage\VoteStorage;
 use form_builder\models\simple_form_elements\SimpleFormButton;

@@ -9,6 +9,7 @@ use copyanni\model\VoteId;
 use copyanni\scoreboard\AnniGameScoreboard;
 use copyanni\service\VoteMapService;
 use copyanni\storage\AnniPlayerDataStorage;
+use copyanni\storage\PlayerDeviceDataStorage;
 use copyanni\storage\VoteStorage;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;

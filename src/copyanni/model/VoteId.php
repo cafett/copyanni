@@ -4,7 +4,6 @@
 namespace copyanni\model;
 
 
-use game_chef\models\GameId;
 
 class VoteId
 {

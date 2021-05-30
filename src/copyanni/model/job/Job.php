@@ -6,7 +6,6 @@ namespace copyanni\model\job;
 
 use game_chef\TaskSchedulerStorage;
 use pocketmine\entity\EffectInstance;
-use pocketmine\entity\Entity;
 use pocketmine\item\Item;
 use pocketmine\Player;
 use pocketmine\scheduler\ClosureTask;

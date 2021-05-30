@@ -4,7 +4,6 @@
 namespace copyanni\model\job;
 
 
-use Cassandra\Date;
 use copyanni\GameTypeList;
 use copyanni\storage\AnniPlayerDataStorage;
 use game_chef\api\GameChef;
