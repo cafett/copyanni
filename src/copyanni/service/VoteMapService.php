@@ -11,7 +11,7 @@ use pocketmine\Server;
 
 class VoteMapService
 {
-    const VoteWoldKey = "VoteMap";
+    const VoteWoldKey = "VoteMap";//configのkey+map名
     private static string $voteFolderName;
 
     static function init(string $folderName): void {
