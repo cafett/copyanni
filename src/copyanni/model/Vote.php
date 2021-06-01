@@ -4,12 +4,14 @@
 namespace copyanni\model;
 
 
-use copyanni\GameTypeList;
+use copyanni\scoreboard\VoteScoreboard;
+use copyanni\TypeList;
 use copyanni\item\hotbar_menu\VoteHotbarMenu;
 use copyanni\service\AnniGameService;
 use copyanni\service\VoteMapService;
 use game_chef\api\GameChef;
 use game_chef\models\GameId;
+use game_chef\pmmp\bossbar\Bossbar;
 use game_chef\TaskSchedulerStorage;
 use pocketmine\Player;
 use pocketmine\scheduler\ClosureTask;
@@ -27,16 +29,23 @@ class Vote
     //playerName=>mapName
     private array $mapVotes = [];
 
-    private TaskHandler  $handler;
+    private ?TaskHandler $bossbarTaskHandler = null;
+    private int $elapsedTime = 0;
+    private int $mapElectTime = 60;
+    private int $teamSelectTime = 60 * 3;
+
+    private ?TaskHandler  $handler = null;
 
     public function __construct() {
         $this->id = VoteId::asNew();
         $this->status = VoteStatus::MapElect();
-        $this->mapOptions = GameChef::getTeamGameMapNames(GameTypeList::anni());
+        $this->mapOptions = GameChef::getTeamGameMapNames(TypeList::Anni());
     }
 
     public function close(): void {
-        $this->handler->cancel();
+        if ($this->handler !== null) $this->handler->cancel();
+        if ($this->bossbarTaskHandler !== null) $this->bossbarTaskHandler->cancel();
+
         $level = VoteMapService::getVoteLevel($this->id);
         foreach ($level->getPlayers() as $player) {
             $level = Server::getInstance()->getDefaultLevel();
@@ -57,6 +66,7 @@ class Vote
             return;
         }
 
+        VoteScoreboard::send($player, $this);
         if ($this->status->equals(VoteStatus::MapElect())) {
             $this->mapVotes[$player->getName()] = "";
 
@@ -67,7 +77,18 @@ class Vote
             $menu->send();
 
             //16人以上なら1分後にマップ選択を締め切り、チーム選択を開始する
-            if (count($this->mapVotes) >= 16) {
+            if ($this->status->equals(VoteStatus::MapElect()) and count($this->mapVotes) >= 16) {
+                $this->bossbarTaskHandler = TaskSchedulerStorage::get()->scheduleRepeatingTask(new ClosureTask(function (int $tick): void {
+                    $this->elapsedTime++;
+                    $title = "マップ選択";
+                    $percentage = ($this->mapElectTime - $this->elapsedTime) / $this->mapElectTime;
+
+                    foreach (VoteMapService::getVoteLevel($this->id)->getPlayers() as $player) {
+                        $bossbar = new Bossbar($player, TypeList::VoteBossbar(), $title, $percentage);
+                        $bossbar->send();
+                    }
+                }), 20);
+
                 $this->handler = TaskSchedulerStorage::get()->scheduleDelayedTask(new ClosureTask(function (int $tick): void {
                     self::startTeamSelecting();
                 }), 20 * 60);
@@ -79,14 +100,32 @@ class Vote
         if ($this->status->equals(VoteStatus::MapElect())) {
             unset($this->mapVotes[$player->getName()]);
         }
+        VoteScoreboard::update(VoteMapService::getVoteLevel($this->id)->getPlayers(), $this);
+        $bossbar = Bossbar::findByType($player, TypeList::VoteBossbar());
+        if ($bossbar !== null) $bossbar->remove();
 
         $level = Server::getInstance()->getDefaultLevel();
         $player->teleport($level->getSpawnLocation());
     }
 
     public function startTeamSelecting(): void {
+        $this->bossbarTaskHandler->cancel();
+        $this->elapsedTime = 0;
+        $this->bossbarTaskHandler = TaskSchedulerStorage::get()->scheduleRepeatingTask(new ClosureTask(function (int $tick): void {
+            $this->elapsedTime++;
+
+            $title = "チーム選択";
+            $percentage = ($this->mapElectTime - $this->elapsedTime) / $this->mapElectTime;
+
+            foreach (VoteMapService::getVoteLevel($this->id)->getPlayers() as $player) {
+                $bossbar = new Bossbar($player, TypeList::VoteBossbar(), $title, $percentage);
+                $bossbar->send();
+            }
+        }), 20);
+
+
         if ($this->status->equals(VoteStatus::MapElect())) {
-            $selectedMapName = self::getMostPopularMapName();
+            $selectedMapName = array_key_first(self::getMapElectResult());
             $this->gameId = AnniGameService::buildGame($selectedMapName);//試合を作成
 
             foreach (VoteMapService::getVoteLevel($this->id)->getPlayers() as $player) {
@@ -96,9 +135,15 @@ class Vote
                 $menu->send();
             }
             $this->status = VoteStatus::TeamSelect();
+            VoteScoreboard::update(VoteMapService::getVoteLevel($this->id)->getPlayers(), $this);
 
             //3分後に試合開始
             $this->handler = TaskSchedulerStorage::get()->scheduleDelayedTask(new ClosureTask(function (int $tick): void {
+                $this->bossbarTaskHandler->cancel();
+                foreach (VoteMapService::getVoteLevel($this->id)->getPlayers() as $player) {
+                    $bossbar = Bossbar::findByType($player, TypeList::VoteBossbar());
+                    if ($bossbar !== null) $bossbar->remove();
+                }
                 GameChef::startGame($this->gameId);
             }), 20 * 60 * 3);
         }
@@ -121,7 +166,7 @@ class Vote
         $player->sendMessage($mapName . "投票できませんでした");
     }
 
-    public function getMostPopularMapName(): string {
+    public function getMapElectResult(): array {
         $mapScores = [];
         foreach ($this->mapOptions as $mapName) {
             $mapScores[$mapName] = 0;
@@ -130,9 +175,9 @@ class Vote
         foreach ($this->mapVotes as $playerName => $mapName) {
             $mapScores[$mapName] = $mapScores[$mapName] + 1;
         }
-
         asort($mapScores);
-        return array_key_first($mapScores);
+
+        return $mapScores;
     }
 
     public function getId(): VoteId {
