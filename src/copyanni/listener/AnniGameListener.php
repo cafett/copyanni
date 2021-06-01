@@ -17,7 +17,7 @@ use copyanni\model\job\Warrior;
 use copyanni\storage\PlayerDeviceDataStorage;
 use copyanni\scoreboard\AnniGameScoreboard;
 use copyanni\service\AnniGameService;
-use copyanni\GameTypeList;
+use copyanni\TypeList;
 use copyanni\storage\AnniPlayerDataStorage;
 use copyanni\storage\VoteStorage;
 use game_chef\api\GameChef;
@@ -75,7 +75,7 @@ class AnniGameListener implements Listener
     public function onQuitGame(PlayerQuitGameEvent $event) {
         $player = $event->getPlayer();
         $gameType = $event->getGameType();
-        if (!$gameType->equals(GameTypeList::anni())) return;
+        if (!$gameType->equals(TypeList::Anni())) return;
 
         AnniGameService::backToLobby($player);
     }
@@ -83,13 +83,13 @@ class AnniGameListener implements Listener
     public function onUpdatedGameTimer(UpdatedGameTimerEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
-        if (!$gameType->equals(GameTypeList::anni())) return;
+        if (!$gameType->equals(TypeList::Anni())) return;
 
         $phase = AnniGameService::getGamePhase($gameId);
         //ボスバーの更新
         foreach (GameChef::getPlayerDataList($gameId) as $playerData) {
             $player = Server::getInstance()->getPlayer($playerData->getName());
-            $bossbar = Bossbar::findByType($player, GameTypeList::anni()->toBossbarType());
+            $bossbar = Bossbar::findByType($player, TypeList::Anni()->toBossbarType());
 
             //ボスバーの無い試合 or バグ
             //ほぼ１００％前者なので処理を終わらせる
@@ -123,7 +123,7 @@ class AnniGameListener implements Listener
     public function onStartedGame(StartedGameEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
-        if (!$gameType->equals(GameTypeList::anni())) return;
+        if (!$gameType->equals(TypeList::Anni())) return;
 
         $game = GameChef::findTeamGameById($gameId);
         GameChef::setTeamGamePlayersSpawnPoint($gameId);
@@ -137,7 +137,7 @@ class AnniGameListener implements Listener
     public function onFinishedGame(FinishedGameEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
-        if (!$gameType->equals(GameTypeList::anni())) return;
+        if (!$gameType->equals(TypeList::Anni())) return;
 
         //voteを削除
         $vote = VoteStorage::getByGameId($gameId);
@@ -178,7 +178,7 @@ class AnniGameListener implements Listener
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
         $teamId = $event->getTeamId();
-        if (!$gameType->equals(GameTypeList::anni())) return;
+        if (!$gameType->equals(TypeList::Anni())) return;
 
         $game = GameChef::findGameById($gameId);
         $team = $game->getTeamById($teamId);
@@ -205,7 +205,7 @@ class AnniGameListener implements Listener
         $attacker = $event->getAttacker();
         $killedPlayer = $event->getKilledPlayer();
 
-        if (!$gameType->equals(GameTypeList::anni())) return;
+        if (!$gameType->equals(TypeList::Anni())) return;
         if ($event->isFriendlyFire()) return;//試合の設定上ありえないけど
 
         $game = GameChef::findTeamGameById($gameId);
@@ -230,7 +230,7 @@ class AnniGameListener implements Listener
     public function onAddedScore(AddedScoreEvent $event) {
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
-        if (!$gameType->equals(GameTypeList::anni())) return;
+        if (!$gameType->equals(TypeList::Anni())) return;
 
         $value = $event->getCurrentScore()->getValue();
         if ($value === 1) {
@@ -286,7 +286,7 @@ class AnniGameListener implements Listener
     //Assassin
     public function onPlayerDeath(PlayerDeathEvent $event) {
         $player = $event->getPlayer();
-        if (!GameChef::isRelatedWith($player, GameTypeList::anni())) return;
+        if (!GameChef::isRelatedWith($player, TypeList::Anni())) return;
 
         $playerAnniData = AnniPlayerDataStorage::get($player->getName());
         $job = $playerAnniData->getCurrentJob();
@@ -305,7 +305,7 @@ class AnniGameListener implements Listener
 
     public function onPlayerReSpawn(PlayerRespawnEvent $event) {
         $player = $event->getPlayer();
-        if (!GameChef::isRelatedWith($player, GameTypeList::anni())) return;
+        if (!GameChef::isRelatedWith($player, TypeList::Anni())) return;
 
         AnniGameService::initPlayerStatus($player);
     }
@@ -327,7 +327,7 @@ class AnniGameListener implements Listener
         $game = GameChef::findGameById($playerData->getBelongGameId());
 
         //anni じゃなかったら
-        if (!$game->getType()->equals(GameTypeList::anni())) return;
+        if (!$game->getType()->equals(TypeList::Anni())) return;
 
         //nexus
         if ($block->getId() === Nexus::ID) {
@@ -398,7 +398,7 @@ class AnniGameListener implements Listener
         if ($playerData->getBelongGameId() === null) return;
 
         $game = GameChef::findGameById($playerData->getBelongGameId());
-        if (!$game->getType()->equals(GameTypeList::anni())) return;
+        if (!$game->getType()->equals(TypeList::Anni())) return;
 
         if (!$this->isCanPlace($event->getBlock()->getId())) {
             if (!$player->isOp() and $player->getGamemode() !== Player::CREATIVE) {
@@ -435,7 +435,7 @@ class AnniGameListener implements Listener
 
     //Warrior Assassin Lumberjack Pyro
     public function onPlayerAttackPlayer(PlayerAttackPlayerEvent $event) {
-        if (!$event->getGameType()->equals(GameTypeList::anni())) return;
+        if (!$event->getGameType()->equals(TypeList::Anni())) return;
 
         $target = $event->getTarget();
         $attacker = $event->getAttacker();

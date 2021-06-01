@@ -4,7 +4,7 @@
 namespace copyanni\model\job;
 
 
-use copyanni\GameTypeList;
+use copyanni\TypeList;
 use copyanni\item\Bloodbag;
 use game_chef\api\GameChef;
 use pocketmine\entity\Effect;
@@ -47,7 +47,7 @@ class Healer extends Job
         $count = 0;
         foreach ($gamePlayers as $gamePlayer) {
             //クリエイティブ状態のOPとかを排除するため
-            if (GameChef::isRelatedWith($gamePlayer, GameTypeList::anni())) {
+            if (GameChef::isRelatedWith($gamePlayer, TypeList::Anni())) {
                 $gamePlayerData = GameChef::findPlayerData($gamePlayer->getName());
                 if ($gamePlayerData->getBelongTeamId()->equals($playerData->getBelongTeamId())) {
                     $gamePlayer->addEffect(new EffectInstance(Effect::getEffect(Effect::REGENERATION), 20 * 3, 3));
@@ -66,7 +66,7 @@ class Healer extends Job
         if (!$result) return false;
         if ($target->distance($player) > 10) return false;
 
-        if (GameChef::isRelatedWith($target, GameTypeList::anni())) {
+        if (GameChef::isRelatedWith($target, TypeList::Anni())) {
             $playerData = GameChef::findPlayerData($player->getName());
             $targetData = GameChef::findPlayerData($target->getName());
             if ($targetData->getBelongTeamId()->equals($playerData->getBelongTeamId())) {

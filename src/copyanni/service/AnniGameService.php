@@ -5,7 +5,7 @@ namespace copyanni\service;
 use copyanni\block\Nexus;
 use copyanni\model\job\Handyman;
 use copyanni\scoreboard\AnniGameScoreboard;
-use copyanni\GameTypeList;
+use copyanni\TypeList;
 use copyanni\storage\AnniPlayerDataStorage;
 use game_chef\api\GameChef;
 use game_chef\api\TeamGameBuilder;
@@ -27,7 +27,7 @@ class AnniGameService
         $builder = new TeamGameBuilder();
         try {
             $builder->setNumberOfTeams(4);
-            $builder->setGameType(GameTypeList::anni());
+            $builder->setGameType(TypeList::Anni());
             $builder->setTimeLimit(null);
             $builder->setVictoryScore(null);
             $builder->setCanJumpIn(true);
@@ -55,7 +55,7 @@ class AnniGameService
         $player->teleport(Position::fromObject($player->getSpawn(), $level));
 
         //ボスバー
-        $bossbar = new Bossbar($player, GameTypeList::anni()->toBossbarType(), "", 1.0);
+        $bossbar = new Bossbar($player, TypeList::Anni()->toBossbarType(), "", 1.0);
         $bossbar->send();
 
         //スコアボード

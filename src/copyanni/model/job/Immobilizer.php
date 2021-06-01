@@ -4,7 +4,7 @@
 namespace copyanni\model\job;
 
 
-use copyanni\GameTypeList;
+use copyanni\TypeList;
 use copyanni\storage\AnniPlayerDataStorage;
 use game_chef\api\GameChef;
 use pocketmine\entity\Effect;
@@ -38,7 +38,7 @@ class Immobilizer extends Job
         foreach ($player->getLevel()->getPlayers() as $subject) {
             if ($subject->distance($player) <= $distance) {
                 $target = $subject;
-                if (GameChef::isRelatedWith($subject, GameTypeList::anni())) {
+                if (GameChef::isRelatedWith($subject, TypeList::Anni())) {
                     $subjectData = GameChef::findPlayerData($subject->getName());
 
                     if (!$subjectData->getBelongTeamId()->equals($playerData->getBelongTeamId())) {//チーム判定
