@@ -39,7 +39,7 @@ class Vote
     public function __construct() {
         $this->id = VoteId::asNew();
         $this->status = VoteStatus::MapElect();
-        $this->mapOptions = GameChef::getTeamGameMapNames(TypeList::Anni());
+        $this->mapOptions = GameChef::getTeamGameMapNamesByType(TypeList::Anni());
     }
 
     public function close(): void {
