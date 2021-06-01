@@ -8,3 +8,6 @@ commands:
     usage: "/vote"
     description: "vote"
     permission: op
+  hub:
+    usage: "/hub"
+    description: "hub"

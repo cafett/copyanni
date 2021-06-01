@@ -8,10 +8,12 @@ use copyanni\form\VoteListForm;
 use copyanni\listener\AnniGameListener;
 use copyanni\model\VoteId;
 use copyanni\scoreboard\AnniGameScoreboard;
+use copyanni\scoreboard\VoteScoreboard;
 use copyanni\service\VoteMapService;
 use copyanni\storage\AnniPlayerDataStorage;
 use copyanni\storage\PlayerDeviceDataStorage;
 use copyanni\storage\VoteStorage;
+use game_chef\api\GameChef;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\entity\Entity;
@@ -23,6 +25,7 @@ use pocketmine\network\mcpe\protocol\GameRulesChangedPacket;
 use pocketmine\network\mcpe\protocol\LoginPacket;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
+use pocketmine\Server;
 
 class Main extends PluginBase implements Listener
 {
@@ -35,6 +38,7 @@ class Main extends PluginBase implements Listener
 
         DataPath::init($this->getDataFolder());
         AnniGameScoreboard::init();
+        VoteScoreboard::init();
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
         $this->getServer()->getPluginManager()->registerEvents(new AnniGameListener($this->getScheduler()), $this);
         Entity::registerEntity(FishingHook::class, true, ["FishingHook", Entity::FISHING_HOOK]);
@@ -80,9 +84,25 @@ class Main extends PluginBase implements Listener
 
             $sender->sendForm(new VoteListForm());
             return true;
+        } else if ($label === "hub") {
+            $levelName = $sender->getLevel()->getName();
+            if (VoteMapService::isVoteLevel($levelName)) {//voteからhub
+                $vote = VoteStorage::find(new VoteId(str_replace(VoteMapService::VoteWoldKey, "", $levelName)));
+                if ($vote !== null) {
+                    $vote->quit($sender);
+                }
+                return true;
+            }
+
+            $playerData = GameChef::findPlayerData($sender->getName());
+            //todo:anni以外の試合にも作用してしまう
+            if ($playerData->getBelongGameId() !== null) {//試合に参加している
+                GameChef::quitGame($sender);
+            } else {//試合に参加していない
+                $level = Server::getInstance()->getDefaultLevel();
+                $sender->teleport($level->getSpawnLocation());
+            }
         }
-        //todo:hubコマンド(vote->quit())
-        //todo:vote world reload
         return false;
     }
 }
