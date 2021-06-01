@@ -13,3 +13,16 @@
 3,各チームごとにスポーンを設定  
 4,各チームごとに、カスタム座標データ(key="nexus")を設定  
 5,各チームごとに、カスタム座標データ(key="defender_position")を設定  
+
+### Voteの設定
+Configの`VoteMap`にVoteで使うワールド名を入れます  
+使用されるマップはコピーされたものになり、試合終了後に削除されます  
+`/vote`でvote一覧  
+`/vote manage`でvoteの管理(作成や削除)
+
+
+##　TODO
+ - [ ] [職業](https://github.com/cafett/copyanni/issues/1)
+ - [ ] ボス
+ - [ ] ジャンプパッド
+ - [ ] パーミッションエリア
