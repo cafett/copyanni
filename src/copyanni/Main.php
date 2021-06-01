@@ -4,6 +4,7 @@ namespace copyanni;
 
 use copyanni\entity\FishingHook;
 use copyanni\entity\ScorpioHookEntity;
+use copyanni\form\VoteListForm;
 use copyanni\listener\AnniGameListener;
 use copyanni\model\VoteId;
 use copyanni\scoreboard\AnniGameScoreboard;
@@ -69,6 +70,17 @@ class Main extends PluginBase implements Listener
 
     public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool {
         if (!($sender instanceof Player)) return false;
+        if ($label === "vote") {
+            if (count($args) === 1) {
+                if ($args[0] === "manage") {
+                    $sender->sendForm(new VoteListForm($sender->isOp()));
+                    return true;
+                }
+            }
+
+            $sender->sendForm(new VoteListForm());
+            return true;
+        }
         //todo:hubコマンド(vote->quit())
         //todo:vote world reload
         return false;

@@ -178,7 +178,7 @@ class AnniGameService
         $text = "map:{$game->getMap()->getName()},";
         $text .= "phase:" . AnniGameService::getGamePhase($game->getId()) . "\n";
         foreach ($game->getTeams() as $team) {
-            $text .= $team->getTeamColorFormat() . $team->getName() . TextFormat::RESET . ":" . Nexus::MAX_HEALTH - $team->getScore()->getValue() . ",";
+            $text .= $team->getTeamColorFormat() . $team->getName() . TextFormat::RESET . ":" . (Nexus::MAX_HEALTH - $team->getScore()->getValue()) . ",";
         }
         return $text;
     }

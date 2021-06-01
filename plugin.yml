@@ -2,3 +2,9 @@ name: copyanni
 main: copyanni\Main
 version: 1.0.0
 api: [3.0.0]
+
+commands:
+  vote:
+    usage: "/vote"
+    description: "vote"
+    permission: op

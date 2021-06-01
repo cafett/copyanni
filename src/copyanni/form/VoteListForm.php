@@ -4,6 +4,7 @@
 namespace copyanni\form;
 
 
+use copyanni\model\Vote;
 use copyanni\storage\VoteStorage;
 use form_builder\models\simple_form_elements\SimpleFormButton;
 use form_builder\models\SimpleForm;
@@ -18,6 +19,9 @@ class VoteListForm extends SimpleForm
                 "Voteを作成",
                 null,
                 function (Player $player) {
+                    $vote = new Vote();
+                    $vote->setUp();
+                    VoteStorage::add($vote);
                 }
             );
         }

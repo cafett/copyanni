@@ -20,7 +20,7 @@ use pocketmine\Server;
 class Vote
 {
     private VoteId $id;
-    private ?GameId $gameId;
+    private ?GameId $gameId = null;
     private VoteStatus $status;
 
     private array $mapOptions;
@@ -44,6 +44,10 @@ class Vote
         }
 
         GameChef::deleteWorld($level->getName());
+    }
+
+    public function setUp(): void {
+        VoteMapService::generateVoteLevel($this->id);
     }
 
     public function join(Player $player): void {
@@ -80,7 +84,7 @@ class Vote
         $player->teleport($level->getSpawnLocation());
     }
 
-    public function startTeamSelecting(): bool {
+    public function startTeamSelecting(): void {
         if ($this->status->equals(VoteStatus::MapElect())) {
             $selectedMapName = self::getMostPopularMapName();
             $this->gameId = AnniGameService::buildGame($selectedMapName);//試合を作成
@@ -97,9 +101,7 @@ class Vote
             $this->handler = TaskSchedulerStorage::get()->scheduleDelayedTask(new ClosureTask(function (int $tick): void {
                 GameChef::startGame($this->gameId);
             }), 20 * 60 * 3);
-            return true;
         }
-        return false;
     }
 
     public function declineNewPlayers(): bool {
@@ -110,12 +112,13 @@ class Vote
         return false;
     }
 
-    public function voteMap(string $playerName, string $mapName): bool {
+    public function voteMap(Player $player, string $mapName): void {
         if ($this->status->equals(VoteStatus::MapElect())) {
-            $this->mapVotes[$playerName] = $mapName;
-            return true;
+            $this->mapVotes[$player->getName()] = $mapName;
+            $player->sendMessage($mapName . "に投票しました");
+            return;
         }
-        return false;
+        $player->sendMessage($mapName . "投票できませんでした");
     }
 
     public function getMostPopularMapName(): string {

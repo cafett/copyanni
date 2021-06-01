@@ -12,18 +12,19 @@ use pocketmine\Server;
 class VoteMapService
 {
     const VoteWoldKey = "VoteMap";//configのkey+map名
-    private static string $voteFolderName;
+    private static string $voteMapName;
 
     static function init(string $folderName): void {
-        self::$voteFolderName = $folderName;
+        self::$voteMapName = $folderName;
     }
 
     static function generateVoteLevel(VoteId $voteId): void {
-        GameChef::copyWorld(self::$voteFolderName, strval($voteId) . self::VoteWoldKey);
+        GameChef::copyWorld(self::$voteMapName, self::$voteMapName . strval($voteId) . self::VoteWoldKey);
     }
 
     static function getVoteLevel(VoteId $voteId): Level {
-        return Server::getInstance()->getLevelByName(strval($voteId) . self::VoteWoldKey);
+        $name = self::$voteMapName . strval($voteId) . self::VoteWoldKey;
+        return GameChef::getWorld($name, true);
     }
 
     static function isVoteLevel(string $levelName): bool {

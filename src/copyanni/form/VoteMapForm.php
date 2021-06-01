@@ -22,8 +22,7 @@ class VoteMapForm extends SimpleForm
                     $vote = VoteStorage::find($voteId);
                     if ($vote === null) return;
 
-                    $result = $vote->voteMap($player->getName(), $mapName);
-                    $player->sendMessage($result ? $mapName . "に投票しました" : "投票できませんでした");
+                    $vote->voteMap($player, $mapName);
                 }
             );
         }
