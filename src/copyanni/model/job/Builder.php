@@ -5,6 +5,7 @@ namespace copyanni\model\job;
 
 
 use copyanni\item\ResourceDrop;
+use pocketmine\block\Block;
 use pocketmine\item\Item;
 use pocketmine\item\ItemIds;
 use pocketmine\Player;
@@ -36,8 +37,8 @@ class Builder extends Job
      * マツの木の階段0～14個
      * 松明2～3個
      */
-    public function activateSkill(Player $player): bool {
-        $result = parent::activateSkill($player);
+    public function activateSkill(Player $player, ?Block $block = null): bool {
+        $result = parent::activateSkill($player, $block);
         $items = [
             Item::get(ItemIds::DIRT, 0, mt_rand(33, 58)),
             Item::get(ItemIds::BRICK_BLOCK, 0, mt_rand(0, 36)),

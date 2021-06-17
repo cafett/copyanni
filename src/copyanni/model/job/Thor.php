@@ -7,6 +7,7 @@ namespace copyanni\model\job;
 use copyanni\item\Hammer;
 use copyanni\service\SoundService;
 use game_chef\api\GameChef;
+use pocketmine\block\Block;
 use pocketmine\entity\Effect;
 use pocketmine\entity\EffectInstance;
 use pocketmine\entity\Entity;
@@ -39,8 +40,8 @@ class Thor extends Job
         );
     }
 
-    public function activateSkill(Player $player): bool {
-        $result = parent::activateSkill($player);
+    public function activateSkill(Player $player, ?Block $block = null): bool {
+        $result = parent::activateSkill($player, $block);
         if (!$result) return false;
 
         $playerData = GameChef::findPlayerData($player->getName());

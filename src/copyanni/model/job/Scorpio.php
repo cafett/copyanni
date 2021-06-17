@@ -6,6 +6,7 @@ namespace copyanni\model\job;
 
 use copyanni\entity\ScorpioHookEntity;
 use copyanni\item\Hook;
+use pocketmine\block\Block;
 use pocketmine\entity\Entity;
 use pocketmine\item\Item;
 use pocketmine\item\ItemIds;
@@ -29,8 +30,8 @@ class Scorpio extends Job
         );
     }
 
-    public function activateSkill(Player $player): bool {
-        $result = parent::activateSkill($player);
+    public function activateSkill(Player $player, ?Block $block = null): bool {
+        $result = parent::activateSkill($player, $block);
         if (!$result) return false;
 
         $nbt = Entity::createBaseNBT($player->asVector3()->add(0, $player->getEyeHeight()), $player->getDirectionVector()->multiply(2), $player->getYaw(), $player->getPitch());

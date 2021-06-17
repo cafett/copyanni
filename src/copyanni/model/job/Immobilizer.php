@@ -7,6 +7,7 @@ namespace copyanni\model\job;
 use copyanni\TypeList;
 use copyanni\storage\AnniPlayerDataStorage;
 use game_chef\api\GameChef;
+use pocketmine\block\Block;
 use pocketmine\entity\Effect;
 use pocketmine\entity\EffectInstance;
 use pocketmine\item\Item;
@@ -30,9 +31,9 @@ class Immobilizer extends Job
         );
     }
 
-    public function activateSkill(Player $player): bool {
+    public function activateSkill(Player $player, ?Block $block = null): bool {
         $target = null;
-        $distance = 6;;
+        $distance = 6;
 
         $playerData = GameChef::findPlayerData($player->getName());
         foreach ($player->getLevel()->getPlayers() as $subject) {
@@ -60,7 +61,7 @@ class Immobilizer extends Job
         }
         if ($target === null) return false;
 
-        $result = parent::activateSkill($player);
+        $result = parent::activateSkill($player, $block);
         if (!$result) return false;
         $target->addEffect(new EffectInstance(Effect::getEffect(Effect::SLOWNESS), 20 * 4, 10));
         $target->addEffect(new EffectInstance(Effect::getEffect(Effect::JUMP_BOOST), 20 * 4, -10));

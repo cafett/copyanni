@@ -5,6 +5,7 @@ namespace copyanni\model\job;
 
 
 use game_chef\TaskSchedulerStorage;
+use pocketmine\block\Block;
 use pocketmine\entity\EffectInstance;
 use pocketmine\item\Item;
 use pocketmine\Player;
@@ -68,7 +69,7 @@ abstract class Job
         }
     }
 
-    public function activateSkill(Player $player): bool {
+    public function activateSkill(Player $player, ?Block $block = null): bool {
         if ($this->onCoolTime) {
             $player->sendMessage("あと" . $this->skillCoolTime . "秒");
             return false;
@@ -101,4 +102,5 @@ abstract class Job
     }
 
     public function onChangeJob(Player $player): void { }
+    public function onQuitGame(Player $player): void { }
 }

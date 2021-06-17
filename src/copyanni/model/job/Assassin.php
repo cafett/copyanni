@@ -6,6 +6,7 @@ namespace copyanni\model\job;
 
 use copyanni\item\Leap;
 use game_chef\TaskSchedulerStorage;
+use pocketmine\block\Block;
 use pocketmine\entity\Effect;
 use pocketmine\entity\EffectInstance;
 use pocketmine\item\Item;
@@ -38,7 +39,7 @@ class Assassin extends Job
         );
     }
 
-    public function activateSkill(Player $player): bool {
+    public function activateSkill(Player $player, ?Block $block = null): bool {
         //$result = parent::activateSkill($player);
         //if (!$result) return false;
 

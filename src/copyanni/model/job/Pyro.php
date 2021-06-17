@@ -6,6 +6,7 @@ namespace copyanni\model\job;
 
 use copyanni\item\FireStorm;
 use game_chef\api\GameChef;
+use pocketmine\block\Block;
 use pocketmine\entity\Effect;
 use pocketmine\entity\EffectInstance;
 use pocketmine\item\Item;
@@ -33,8 +34,8 @@ class Pyro extends Job
         );
     }
 
-    public function activateSkill(Player $player): bool {
-        $result = parent::activateSkill($player);
+    public function activateSkill(Player $player, ?Block $block = null): bool {
+        $result = parent::activateSkill($player, $block);
         if (!$result) return false;
 
         $playerData = GameChef::findPlayerData($player->getName());

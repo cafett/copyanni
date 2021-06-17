@@ -4,6 +4,7 @@
 namespace copyanni\model\job;
 
 
+use pocketmine\block\Block;
 use pocketmine\item\Item;
 use pocketmine\item\ItemIds;
 use pocketmine\Player;
@@ -27,7 +28,7 @@ class Acrobat extends Job
         );
     }
 
-    public function activateSkill(Player $player): bool {
+    public function activateSkill(Player $player, ?Block $block = null): bool {
         $result = parent::activateSkill($player);
         if (!$result) return false;
 

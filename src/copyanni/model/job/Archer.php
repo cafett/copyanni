@@ -5,6 +5,7 @@ namespace copyanni\model\job;
 
 
 use copyanni\item\ArrowDrop;
+use pocketmine\block\Block;
 use pocketmine\item\enchantment\Enchantment;
 use pocketmine\item\enchantment\EnchantmentInstance;
 use pocketmine\item\Item;
@@ -36,8 +37,8 @@ class Archer extends Job
         );
     }
 
-    public function activateSkill(Player $player): bool {
-        $result = parent::activateSkill($player);
+    public function activateSkill(Player $player, ?Block $block = null): bool {
+        $result = parent::activateSkill($player, $block);
         if ($result) $player->getInventory()->addItem(Item::get(ItemIds::ARROW, 0, 32));
         return $result;
     }

@@ -5,6 +5,7 @@ namespace copyanni\model\job;
 
 
 use copyanni\item\GoldRush;
+use pocketmine\block\Block;
 use pocketmine\item\Item;
 use pocketmine\item\ItemIds;
 use pocketmine\Player;
@@ -29,8 +30,8 @@ class Miner extends Job
         );
     }
 
-    public function activateSkill(Player $player): bool {
-        $result = parent::activateSkill($player);
+    public function activateSkill(Player $player, ?Block $block = null): bool {
+        $result = parent::activateSkill($player, $block);
         if ($result) {
             //todo skill
         }

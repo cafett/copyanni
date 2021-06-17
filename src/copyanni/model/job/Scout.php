@@ -6,6 +6,7 @@ namespace copyanni\model\job;
 
 use copyanni\entity\FishingHook;
 use copyanni\item\Grapple;
+use pocketmine\block\Block;
 use pocketmine\entity\Effect;
 use pocketmine\entity\EffectInstance;
 use pocketmine\entity\Entity;
@@ -34,10 +35,10 @@ class Scout extends Job
         );
     }
 
-    public function activateSkill(Player $player): bool {
+    public function activateSkill(Player $player, ?Block $block = null): bool {
         $item = $player->getInventory()->getItemInHand();
         if (!$item->getNamedTag()->offsetExists("hook_id")) {
-            $result = parent::activateSkill($player);
+            $result = parent::activateSkill($player, $block);
             if (!$result) return false;
 
             $this->spawnFishingHook($player);
@@ -46,7 +47,7 @@ class Scout extends Job
 
         $hook = $player->getLevel()->getEntity($item->getNamedTag()->getInt("hook_id"));
         if ($hook === null) {
-            $result = parent::activateSkill($player);
+            $result = parent::activateSkill($player, $block);
             if (!$result) return false;
 
             $this->spawnFishingHook($player);
