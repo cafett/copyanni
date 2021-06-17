@@ -2,6 +2,7 @@
 
 namespace copyanni;
 
+use copyanni\block\NetherPortalBlock;
 use copyanni\entity\FishingHook;
 use copyanni\entity\ScorpioHookEntity;
 use copyanni\form\VoteListForm;
@@ -14,6 +15,7 @@ use copyanni\storage\AnniPlayerDataStorage;
 use copyanni\storage\PlayerDeviceDataStorage;
 use copyanni\storage\VoteStorage;
 use game_chef\api\GameChef;
+use pocketmine\block\BlockFactory;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\entity\Entity;
@@ -41,6 +43,7 @@ class Main extends PluginBase implements Listener
         VoteScoreboard::init();
         $this->getServer()->getPluginManager()->registerEvents($this, $this);
         $this->getServer()->getPluginManager()->registerEvents(new AnniGameListener($this->getScheduler()), $this);
+        BlockFactory::registerBlock(new NetherPortalBlock(), true);
         Entity::registerEntity(FishingHook::class, true, ["FishingHook", Entity::FISHING_HOOK]);
         Entity::registerEntity(ScorpioHookEntity::class, true, ["ScorpioHookEntity"]);
     }
