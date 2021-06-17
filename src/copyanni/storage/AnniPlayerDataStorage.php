@@ -9,6 +9,9 @@ use copyanni\repository\AnniPlayerDataRepository;
 
 class AnniPlayerDataStorage
 {
+    /**
+     * @var AnniPlayerData[]
+     */
     private static array $dataList = [];
 
     static function get(string $name): AnniPlayerData {
