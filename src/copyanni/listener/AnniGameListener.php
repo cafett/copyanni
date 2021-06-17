@@ -5,7 +5,9 @@ namespace copyanni\listener;
 
 use copyanni\block\Nexus;
 use copyanni\block\Ore;
+use copyanni\block\PortalBlock;
 use copyanni\item\Hammer;
+use copyanni\item\SkillItem;
 use copyanni\model\job\Acrobat;
 use copyanni\model\job\Archer;
 use copyanni\model\job\Assassin;
@@ -17,6 +19,7 @@ use copyanni\model\job\Warrior;
 use copyanni\storage\PlayerDeviceDataStorage;
 use copyanni\scoreboard\AnniGameScoreboard;
 use copyanni\service\AnniGameService;
+use copyanni\storage\PortalStorage;
 use copyanni\TypeList;
 use copyanni\storage\AnniPlayerDataStorage;
 use copyanni\storage\VoteStorage;
@@ -30,6 +33,7 @@ use game_chef\pmmp\events\PlayerAttackPlayerEvent;
 use game_chef\pmmp\events\PlayerJoinGameEvent;
 use game_chef\pmmp\events\PlayerKilledPlayerEvent;
 use game_chef\pmmp\events\PlayerQuitGameEvent;
+use game_chef\pmmp\events\PlayerTapPlayerEvent;
 use game_chef\pmmp\events\StartedGameEvent;
 use game_chef\pmmp\events\UpdatedGameTimerEvent;
 use game_chef\services\MapService;
@@ -49,6 +53,7 @@ use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerJumpEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\event\player\PlayerToggleFlightEvent;
+use pocketmine\event\player\PlayerToggleSneakEvent;
 use pocketmine\item\Armor;
 use pocketmine\item\Axe;
 use pocketmine\item\Item;
@@ -76,6 +81,8 @@ class AnniGameListener implements Listener
         $player = $event->getPlayer();
         $gameType = $event->getGameType();
         if (!$gameType->equals(TypeList::Anni())) return;
+        $anniPlayerData = AnniPlayerDataStorage::get($player->getName());
+        $anniPlayerData->getCurrentJob()->onQuitGame($player);
 
         AnniGameService::backToLobby($player);
     }
@@ -318,7 +325,7 @@ class AnniGameListener implements Listener
         $level = $player->getLevel();
 
         //試合中のマップじゃなかったら
-        if (!MapService::isInstantWorld($level->getName())) return;
+        if (!MapService::isTemporaryWorld($level->getName())) return;
 
         //プレイヤーが試合に参加していなかったら
         $playerData = GameChef::findPlayerData($player->getName());
@@ -392,7 +399,7 @@ class AnniGameListener implements Listener
         $player = $event->getPlayer();
         $level = $player->getLevel();
 
-        if (!MapService::isInstantWorld($level->getName())) return;
+        if (!MapService::isTemporaryWorld($level->getName())) return;
 
         $playerData = GameChef::findPlayerData($player->getName());
         if ($playerData->getBelongGameId() === null) return;
@@ -403,7 +410,7 @@ class AnniGameListener implements Listener
         if (!$this->isCanPlace($event->getBlock()->getId())) {
             if (!$player->isOp() and $player->getGamemode() !== Player::CREATIVE) {
                 $event->setCancelled();
-                $player->sendTip("you cannot place this block");
+                $player->sendTip("そのブロックを置くことはできません");
             }
         }
     }
@@ -432,6 +439,18 @@ class AnniGameListener implements Listener
             }
         }
     }
+
+    public function onPlayerTapPlayer(PlayerTapPlayerEvent $event) {
+        if (!$event->getGameType()->equals(TypeList::Anni())) return;
+        $player = $event->getPlayer();
+        $target = $event->getTarget();
+
+        $item = $player->getInventory()->getItemInHand();
+        if ($item instanceof SkillItem) {
+            $item->onClickPlayer($player, $target);
+        }
+    }
+
 
     //Warrior Assassin Lumberjack Pyro
     public function onPlayerAttackPlayer(PlayerAttackPlayerEvent $event) {
@@ -536,6 +555,20 @@ class AnniGameListener implements Listener
                     }
                 }
             }
+        }
+    }
+
+    public function onPlayerToggleSneak(PlayerToggleSneakEvent $event) {
+        $player = $event->getPlayer();
+        $block = $player->getLevel()->getBlock($player->asVector3());
+
+        if (!GameChef::isRelatedWith($player, TypeList::Anni())) return;
+
+        $playerData = GameChef::findPlayerData($player->getName());
+        if ($block->getId() === PortalBlock::ID) {
+            $pair = PortalStorage::findPair($playerData->getBelongGameId(), $playerData->getBelongTeamId(), $block->asVector3());
+            if ($pair === null) return;
+            $player->teleport($pair);
         }
     }
 }

@@ -30,7 +30,6 @@ class SkillItem extends Item
         return $this->use($player);
     }
 
-    //todo:listerから呼び出す
     public function onClickPlayer(Player $player, Player $target): bool {
         return $this->use($player, null, $target);
     }
@@ -52,7 +51,7 @@ class SkillItem extends Item
             return false;
         }
 
-        $playerAnniData->getCurrentJob()->activateSkill($player);
+        $playerAnniData->getCurrentJob()->activateSkill($player, $block);
         return true;
     }
 }
