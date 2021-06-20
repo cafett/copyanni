@@ -24,7 +24,7 @@ class VoteMapService
 
     static function getVoteLevel(VoteId $voteId): Level {
         $name = self::$voteMapName . strval($voteId) . self::VoteWoldKey;
-        return GameChef::getWorld($name, true);
+        return GameChef::getCopiedLevelByName($name, true);
     }
 
     static function isVoteLevel(string $levelName): bool {

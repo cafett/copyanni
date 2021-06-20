@@ -4,6 +4,9 @@
 namespace copyanni\form;
 
 
+use copyanni\scoreboard\VoteScoreboard;
+use copyanni\service\VoteMapService;
+use copyanni\storage\VoteStorage;
 use form_builder\models\simple_form_elements\SimpleFormButton;
 use form_builder\models\SimpleForm;
 use game_chef\api\GameChef;
@@ -23,7 +26,11 @@ class SelectTeamForm extends SimpleForm
                 $team->getTeamColorFormat() . $team->getName() . TextFormat::RESET . " : $count",
                 null,
                 function (Player $player) use ($gameId, $teamId) {
-                    GameChef::joinTeamGame($player, $gameId, $teamId);
+                    $result = GameChef::joinTeamGame($player, $gameId, $teamId);
+                    if ($result) {
+                        $vote = VoteStorage::getByGameId($gameId);
+                        VoteScoreboard::update(VoteMapService::getVoteLevel($vote->getId())->getPlayers(), $vote);
+                    }
                 }
             );
         }

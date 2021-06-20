@@ -111,7 +111,7 @@ class AnniGameListener implements Listener
                 $bossbar->updatePercentage(1.0);
 
             } else {
-                $bossbar->updatePercentage(1.0 - (($event->getElapsedTime() - (600 * $phase)) / 600));
+                $bossbar->updatePercentage(1.0 - (($event->getElapsedTime() - (600 * $phase) / 600)));
             }
 
             if ($event->getElapsedTime() % 60 === 0) {
@@ -361,7 +361,7 @@ class AnniGameListener implements Listener
                 return;
             }
 
-            $event->setDrops([]);
+            $event->setDrops([Item::get(0)]);
             AnniGameService::breakNexus($game, $targetTeam, $player, $block->asVector3());
         } else if (in_array($block->getId(), Ore::IDS)) {//ore
             //diamondはphase3から
@@ -392,7 +392,7 @@ class AnniGameListener implements Listener
         }
 
         $player->getInventory()->addItem($event->getDrops());
-        $event->setDrops([]);
+        $event->setDrops([Item::get(0)]);
     }
 
     public function onPlaceBlock(BlockPlaceEvent $event) {

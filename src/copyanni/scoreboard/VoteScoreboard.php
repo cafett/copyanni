@@ -23,20 +23,18 @@ class VoteScoreboard extends Scoreboard
         $scores = [];
 
         if ($vote->getStatus()->equals(VoteStatus::MapElect())) {
-            $statusText = "マップ選択 :";
+            $scores[] = new Score("マップ選択 :");
             $electResult = $vote->getMapElectResult();
             foreach ($vote->getMapOptions() as $mapOption) {
-                $statusText .= "\n >$mapOption:" . $electResult[$mapOption];
+                $scores[] = new Score(" $mapOption: {$electResult[$mapOption]}");
             }
-            $scores[] = new Score($statusText);
         } else if ($vote->getGameId() !== null) {
-            $statusText = "チーム選択 :";
+            $scores[] = new Score("チーム選択 :");
             $game = GameChef::findGameById($vote->getGameId());
             foreach ($game->getTeams() as $team) {
                 $players = count(GameChef::getTeamPlayerDataList($team->getId()));
-                $statusText .= "\n >" . $team->getTeamColorFormat() . $team->getName() . ":$players";
+                $scores[] = new Score(" " . $team->getTeamColorFormat() . $team->getName() . ":$players");
             }
-            $scores[] = new Score($statusText);
         }
 
         return parent::__create("===============", $scores, ScoreSortType::smallToLarge());
