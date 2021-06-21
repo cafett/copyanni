@@ -101,8 +101,24 @@ class AnniGameListener implements Listener
             //ボスバーの無い試合 or バグ
             //ほぼ１００％前者なので処理を終わらせる
             if ($bossbar === null) return;
-
             $bossbar->updateTitle("Phase $phase");
+
+            //phaseの変わり目
+            //bossbarのpercentageを1 voteを更新
+            if ($event->getElapsedTime() % 600 === 0) {
+                //todo:演出
+                $nextPhase = $phase + 1;
+                $player->sendMessage("phase$nextPhase になりました");
+                $bossbar->updateTitle("Phase $nextPhase");
+
+                //voteの更新
+                if ($phase === 3) {
+                    $vote = VoteStorage::getByGameId($gameId);
+                    $vote->declineNewPlayers();
+                }
+                $bossbar->updatePercentage(1.0);
+                return;
+            }
 
             if ($phase === 1) {
                 $bossbar->updatePercentage(1.0 - ($event->getElapsedTime() / 600));
@@ -111,18 +127,8 @@ class AnniGameListener implements Listener
                 $bossbar->updatePercentage(1.0);
 
             } else {
-                $bossbar->updatePercentage(1.0 - (($event->getElapsedTime() - (600 * $phase) / 600)));
-            }
-
-            if ($event->getElapsedTime() % 60 === 0) {
-                //todo:演出
-                $player->sendMessage("phase$phase になりました");
-
-                //voteの更新
-                if ($phase === 3) {
-                    $vote = VoteStorage::getByGameId($gameId);
-                    $vote->declineNewPlayers();
-                }
+                $prePhase = $phase - 1;
+                $bossbar->updatePercentage(1.0 - (($event->getElapsedTime() - (600 * $prePhase)) / 600));
             }
         }
     }
@@ -391,7 +397,7 @@ class AnniGameListener implements Listener
             }
         }
 
-        $player->getInventory()->addItem($event->getDrops());
+        $player->getInventory()->addItem(...$event->getDrops());
         $event->setDrops([Item::get(0)]);
     }
 

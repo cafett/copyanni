@@ -168,7 +168,7 @@ class AnniGameService
         $timer = GameChef::findGameTimer($gameId);
         if ($timer === null) return null;
 
-        $phase = floor($timer->getElapsedTime() / 60 * 10);
+        $phase = ceil($timer->getElapsedTime() / 600);
         if ($phase < 1) return 1;
         if ($phase > 5) return 5;
         return $phase;

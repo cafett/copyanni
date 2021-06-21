@@ -31,8 +31,8 @@ class Vote
 
     private ?TaskHandler $bossbarTaskHandler = null;
     private int $elapsedTime = 0;
-    private int $mapElectTime = 60;
-    private int $teamSelectTime = 60 * 3;
+    private int $mapElectTime = 120;
+    private int $teamSelectTime = 120;
 
     private ?TaskHandler  $handler = null;
 
@@ -96,7 +96,7 @@ class Vote
 
                 $this->handler = TaskSchedulerStorage::get()->scheduleDelayedTask(new ClosureTask(function (int $tick): void {
                     self::startTeamSelecting();
-                }), 20 * 60);
+                }), 20 * $this->mapElectTime);
             }
         }
     }
@@ -155,7 +155,7 @@ class Vote
                     if ($bossbar !== null) $bossbar->remove();
                 }
                 GameChef::startGame($this->gameId);
-            }), 20 * 60 * 3);
+            }), 20 * $this->teamSelectTime);
         }
     }
 
