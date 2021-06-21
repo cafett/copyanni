@@ -30,7 +30,7 @@ use game_chef\pmmp\bossbar\Bossbar;
 use game_chef\pmmp\events\AddedScoreEvent;
 use game_chef\pmmp\events\FinishedGameEvent;
 use game_chef\pmmp\events\PlayerAttackPlayerEvent;
-use game_chef\pmmp\events\PlayerJoinGameEvent;
+use game_chef\pmmp\events\PlayerJoinedGameEvent;
 use game_chef\pmmp\events\PlayerKilledPlayerEvent;
 use game_chef\pmmp\events\PlayerQuitGameEvent;
 use game_chef\pmmp\events\PlayerTapPlayerEvent;
@@ -186,7 +186,7 @@ class AnniGameListener implements Listener
         }), 20 * 10);
     }
 
-    public function onPlayerJoinedGame(PlayerJoinGameEvent $event) {
+    public function onPlayerJoinedGame(PlayerJoinedGameEvent $event) {
         $player = $event->getPlayer();
         $gameId = $event->getGameId();
         $gameType = $event->getGameType();
