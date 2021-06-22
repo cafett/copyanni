@@ -24,7 +24,9 @@ class VoteStorage
         return self::$voteList;
     }
 
-    static function find(VoteId $voteId): ?Vote {
+    static function find(?VoteId $voteId): ?Vote {
+        if ($voteId === null) return null;
+
         if (array_key_exists(strval($voteId), self::$voteList)) {
             return self::$voteList[strval($voteId)];
         }

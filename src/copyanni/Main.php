@@ -11,6 +11,7 @@ use copyanni\model\VoteId;
 use copyanni\scoreboard\AnniGameScoreboard;
 use copyanni\scoreboard\VoteScoreboard;
 use copyanni\service\VoteMapService;
+use copyanni\service\VoteService;
 use copyanni\storage\AnniPlayerDataStorage;
 use copyanni\storage\PlayerDeviceDataStorage;
 use copyanni\storage\VoteStorage;
@@ -19,6 +20,7 @@ use pocketmine\block\BlockFactory;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\entity\Entity;
+use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerQuitEvent;
@@ -63,10 +65,7 @@ class Main extends PluginBase implements Listener
         $player = $event->getPlayer();
         $levelName = $player->getLevel()->getName();
         if (VoteMapService::isVoteLevel($levelName)) {
-            $vote = VoteStorage::find(new VoteId(str_replace(VoteMapService::VoteWoldKey, "", $levelName)));
-            if ($vote !== null) {
-                $vote->quit($player);
-            }
+            VoteService::quit($player);
         }
     }
 
@@ -74,6 +73,14 @@ class Main extends PluginBase implements Listener
         $packet = $event->getPacket();
         if ($packet instanceof LoginPacket) {
             PlayerDeviceDataStorage::save($packet);
+        }
+    }
+
+    public function onTeleport(EntityTeleportEvent $event) {
+        $from = $event->getFrom();
+        $entity = $event->getEntity();
+        if (VoteMapService::isVoteLevel($from) and $entity instanceof Player) {
+            VoteService::quit($entity);
         }
     }
 
@@ -90,15 +97,6 @@ class Main extends PluginBase implements Listener
             $sender->sendForm(new VoteListForm());
             return true;
         } else if ($label === "hub") {
-            $levelName = $sender->getLevel()->getName();
-            if (VoteMapService::isVoteLevel($levelName)) {//voteからhub
-                $vote = VoteStorage::find(new VoteId(str_replace(VoteMapService::VoteWoldKey, "", $levelName)));
-                if ($vote !== null) {
-                    $vote->quit($sender);
-                }
-                return true;
-            }
-
             $playerData = GameChef::findPlayerData($sender->getName());
             //todo:anni以外の試合にも作用してしまう
             if ($playerData->getBelongGameId() !== null) {//試合に参加している

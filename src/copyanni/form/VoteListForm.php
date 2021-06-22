@@ -5,6 +5,7 @@ namespace copyanni\form;
 
 
 use copyanni\model\Vote;
+use copyanni\service\VoteService;
 use copyanni\storage\VoteStorage;
 use form_builder\models\simple_form_elements\SimpleFormButton;
 use form_builder\models\SimpleForm;
@@ -35,13 +36,7 @@ class VoteListForm extends SimpleForm
                     if ($forManagement) {
                         $player->sendForm(new VoteManagementForm($voteId));
                     } else {
-                        $vote = VoteStorage::find($voteId);
-                        if ($vote === null) {
-                            $player->sendMessage("voteが存在しませんでした");
-                            return;
-                        }
-
-                        $vote->join($player);
+                        VoteService::join($player, $voteId);
                     }
                 }
             );

@@ -34,4 +34,10 @@ class VoteStatus
     public function __toString() {
         return $this->value;
     }
+
+    public function toJPText():string {
+        if ($this->equals(self::MapElect())) return "マップ選択";
+        if ($this->equals(self::TeamSelect())) return "チーム選択";
+        return "";
+    }
 }

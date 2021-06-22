@@ -11,14 +11,20 @@ use pocketmine\Server;
 class AnniPlayerData
 {
     private string $name;
+    private ?VoteId $belongVoteId;
+
     private array $ownJobNames;
     private Job $currentJob;
+
     private ?DateTime $lastImmobilizedTime;
 
-    public function __construct(string $name, array $ownJobNames, Job $job, ?DateTime $lastImmobilizedTime = null) {
+    public function __construct(string $name, array $ownJobNames, Job $job, VoteId $voteId = null, ?DateTime $lastImmobilizedTime = null) {
         $this->name = $name;
+        $this->belongVoteId = $voteId;
+
         $this->ownJobNames = $ownJobNames;
         $this->currentJob = $job;
+
         $this->lastImmobilizedTime = $lastImmobilizedTime;
     }
 
@@ -39,6 +45,14 @@ class AnniPlayerData
 
         $this->ownJobNames[] = $name;
         return true;
+    }
+
+    public function getBelongVoteId(): ?VoteId {
+        return $this->belongVoteId;
+    }
+
+    public function setBelongVoteId(?VoteId $voteId):void {
+        $this->belongVoteId = $voteId;
     }
 
     static function fromJson(array $json): self {
